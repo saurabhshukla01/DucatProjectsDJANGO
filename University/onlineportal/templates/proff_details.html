@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% for proff_of_university in proffdetail %}
+<h1>proff Name : {{proff_of_university.proff_name}}</h1>
+<img src="{{proff_of_university.proff_image.url}}" height="150px" width="150px">
+{% endfor %}
+{% endblock %}

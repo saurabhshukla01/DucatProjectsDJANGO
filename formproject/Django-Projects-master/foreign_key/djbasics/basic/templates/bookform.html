@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Basic Django
+{% endblock %}
+
+{% block content %}
+<h1>Book Info registeration </h1>
+<form action="" method='post' >
+{% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Insert</button>
+
+</form>
+
+{% endblock %}

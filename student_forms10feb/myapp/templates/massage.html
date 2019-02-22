@@ -1,0 +1,8 @@
+{% extends 'student.html' %}
+{% block content %}
+<form class='col-md-5' method="POST" action="{% url 'student' %}">
+    {% csrf_token %}
+    {{form.as_p}}
+    <input type="submit" class="btn btn-submit">
+</form>
+{% endblock %}

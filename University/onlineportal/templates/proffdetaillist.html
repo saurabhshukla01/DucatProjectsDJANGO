@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="list-group">
+    {% for  proff_details in  proff_detailss %}
+    <div style="border: 2px solid black;">   
+    <label>proff  Name :   <a href="{% url 'proffodetaillist'  proff_details.id %}" class="list-group-item">{{proff_details.proff_name}}</a></label>
+        <img src="{{proff_of_university.proff_image.url}}" height="150px" width="150px">
+        <label>proff  email :   <a href="{% url 'proffodetaillist'  proff_details.id %}" class="list-group-item">{{proff_details.proff_email}}</a></label>
+        <label>proff  salary :   <a href="{% url 'proffodetaillist'  proff_details.id %}" class="list-group-item">{{proff_details.proff_salary}}</a></label>
+        <label>proff  address :   <a href="{% url 'proffodetaillist'  proff_details.id %}" class="list-group-item">{{proff_details.proff_address}}</a></label>
+        <label>proff  lacture fee :   <a href="{% url 'proffodetaillist'  proff_details.id %}" class="list-group-item">{{proff_details.proff_lacture_fee}}</a></label>
+    </div>
+        {% endfor %}
+  </div>
+
+  {{proff_detailss.paginator.page_range}}
+  <center>
+   <div>
+   <span>
+       {% if proff_detailss.has_previous %}
+           <a href="?page=1">&laquo; first</a>
+           <a href="?page={{ proff_detailss.previous_page_number }}">previous</a>
+       {% endif %}
+
+       <span>
+           <strong>Page {{ proff_detailss.number }} of {{ proff_detailss.paginator.num_pages }}.</strong>
+       </span>
+
+       {% if proff_detailss.has_next %}
+           <a href="?page={{ proff_detailss.next_page_number }}">next</a>
+           <a href="?page={{ proff_detailss.paginator.num_pages }}">last &raquo;</a>
+       {% endif %}
+   </span>
+</div></center>
+{% endblock %}

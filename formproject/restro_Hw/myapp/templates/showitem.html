@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% for x in showitemobj %}
+<table>
+        {{x.Item_Name}}
+        {{x.Item_Type}}
+{% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2><strong> Restaurant Name : </strong>  {{restaurant.name}} <br><strong> Restaurant Location : </strong> {{restaurant.location}} <br> <strong> Restaurant Contact Number : </strong> {{restaurant.contact_no}}</h2>
+<br><img src="{{restaurant.image.url}}" width="80%" height="30%"><br><br>
+<h1> ******* ==========    Restaurant full Dishes details    ========== ******* <h1>
+{% for d in dish %}
+
+    <h3><strong> Dish Name : </strong>{{d.dish_name}}</h3>
+    <h3><strong> Dish Price : </strong>{{d.dish_price}} &#8377;</h3><br>
+    <img src="{{d.dish_image.url}}" height="80px" width="160px">
+
+    <!--   <h3><strong> Dish Price : </strong>Dish Price : {{d.dish_price}} $</h3>
+    <img src="{{d.dish_image.url}}" height="30%" width="20%"> 
+    rupee symbol code in html rupee symbol ==   &#8377;   -->
+
+{% endfor %}
+{% endblock %}

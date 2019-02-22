@@ -1,0 +1,36 @@
+<html>
+<head>
+<link href="/static/css/bootstrap.css" rel="stylesheet">
+<link href="/static/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+
+   {% if msg %}
+     {{ msg}}
+   {% endif %}	 
+  <div class='col-sm-8 col-sm-offset-2' style="margin-top:50px">
+
+     <div class="col-sm-12">
+     <div class="thumbnail">
+	   <div class="caption">
+	   {% if det.image %}
+     <img src='{{det.image.url}}' height='200px' width='200px' />
+	 {% endif %}
+   <h3>{{ det.title }}<small>&nbsp;&nbsp;{{ det.timestamp|timesince }}&nbsp;ago</small></h3>
+   <p>Author:{{det.user}}</p>
+   <p>{{ det.content|linebreaks }}</p>
+  
+   <br />
+   
+   
+   <p><a href="{% url 'update' det.id %}" class="btn btn-primary" role="button">Edit</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+   <a href="{% url 'delete' id=det.id %}" class="btn btn-primary" role="button">Delete</a></p>
+   </div>
+   </div>
+   </div>
+   
+
+ </div>
+</body>
+</html>

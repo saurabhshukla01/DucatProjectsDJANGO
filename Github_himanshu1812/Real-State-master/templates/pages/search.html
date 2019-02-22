@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<br><br>
+<section class="page-section categories-page">
+		<div class="container">
+			<div class="row">
+                {% if query_list %}
+				{% for property in query_list %}
+			    {% include 'partials/_property.html' %}
+                {% endfor %}
+				{% else %}
+					 <div class="section-title text-center">
+						<h3>No Properties Listings</h3>
+					 </div>
+				{% endif%}
+				</div>
+			</div>
+		</div>
+	</section>
+{% endblock %}

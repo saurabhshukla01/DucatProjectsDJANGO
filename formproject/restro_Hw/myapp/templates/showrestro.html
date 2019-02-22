@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div>
+        {% for x in showrestroobj %}
+        <a href="{% url 'showitemfun' %}" class="restroname">{{x.first_name}} <br></a>
+        {% endfor %}
+    </div>
+
+{% endblock %}

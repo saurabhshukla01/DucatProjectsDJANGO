@@ -1,0 +1,173 @@
+<html>
+<head>
+<title>hello app</title>
+<style>
+.button {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    width:50px;
+    text-align: center;
+   
+    font-size: 16px;
+	height:35px;
+}
+.button1 {
+    background-color: #0000FF;
+    border: none;
+    color: white;
+    width:60px;
+    text-align: center;
+	text-decoration:none
+    font-size: 16px;
+	height:35px;
+}
+
+</style>
+
+<link rel="stylesheet" href="/static/css/bootstrap.min.css">
+
+
+<script src="/static/js/jquery-1.11.1.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+</head>
+<body>
+<!--
+<div style="width:270px;margin-left:35%;">
+<form action='' method='post'>
+{% csrf_token %}
+<input type="text" name='q'>
+<button type='submit'>Search</button>
+
+</form>
+</div>
+-->
+ <nav class="navbar navbar-inverse">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">Django blog</a>
+    </div>
+	
+	<div style="margin-left:50px">
+    <ul class="nav navbar-nav navbar-left">
+	
+<li><a href="/">Home</a></li>
+
+	
+	  </ul>
+	  </div>
+	 
+	<form class="navbar-form navbar-left" action="{% url 'search' %}">
+	
+      <div class="form-group" style="margin-left:60px">
+        <input type="text" class="form-control" style="width: 400px;"
+		placeholder="Search" name="q">
+      </div>
+	  
+      <button type="submit" class="btn btn-default">Submit
+	  </button>
+	  
+    </form>
+	
+	<div style="margin-right:50px">
+    <ul class="nav navbar-nav navbar-right">
+	
+<li><a href="{% url 'profile' %}">Profile</a></li>
+<li><a href="/logout/">Logout</a></li>
+   <li>
+   <div style="margin-top:5px">
+   {% if request.user.profile.pic %}
+
+<img src="{{request.user.profile.pic.url}}" align="middle" class="img-circle" width="35px" height="35px"/><br><br>
+{% endif %}
+</div>
+   </li>
+	
+	  </ul>
+	  </div>
+  </div>
+</nav> 
+
+<div style="width:550px;margin-left:30%;">
+
+ 
+{% if form %}
+<form action="" method='post' enctype="multipart/form-data">
+{% csrf_token %}
+
+{{form.content}}<br>
+{{form.pic}}<br>
+
+<button type='submit' class='button'>Save</button>
+
+</form>
+</div>
+<br>
+
+
+<div style="width:550px;margin-left:30%;">
+
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title"><b>{% if q %}Search for {{q}}{% elif no_result %} No Result Found {% else %}Recent Post{% endif %}</b></h3>
+  </div>
+</div>
+{% endif %}
+  
+ 
+ 
+{% if data %}
+{% for i in data %}
+<div class="col-sm-12">
+     <div class="thumbnail">
+	   <div class="caption">
+<table>
+
+<tr>
+<td> 
+{% if i.user.profile.pic %}
+
+<img src="{{i.user.profile.pic.url}}" class="img-circle" width="50px" height="50px"/><br><br>
+{% endif %} 
+
+</td>
+
+<td style="padding-left:20px;">
+<h3 style="color:blue"><b>{{i.user.first_name}} {{i.user.last_name}}</b></h3>
+<small><b>{{ i.user.profile.job_title}}&nbsp;&nbsp;&nbsp;{{ i.user.profile.location}}</b></small><br>
+ <small>{{ i.date_created|timesince }}&nbsp;ago</small><br><br>
+</td>
+</tr>
+<tr>
+<td>
+{% if i.pic %}
+
+<img src="{{i.pic.url}}" width="500px" height="200px"/><br><br>
+{% endif %}
+</td>
+<td style="padding-left:20px;">
+{{i.content|linebreaks}}<br><br>
+</td>
+</tr>
+<tr><td>
+{% ifequal i.user request.user %}
+<a href="{% url 'delete' i.id %}" class="btn btn-primary btn-md">Delete</a>
+{% endifequal %}
+</td>
+</tr>
+</table>
+ </div>
+   </div>
+   </div>
+{% endfor %}
+
+{% endif %}
+
+{% if msg %}
+<p>{{msg}}</p>
+{% endif %}
+</div>
+
+</body>
+</html>

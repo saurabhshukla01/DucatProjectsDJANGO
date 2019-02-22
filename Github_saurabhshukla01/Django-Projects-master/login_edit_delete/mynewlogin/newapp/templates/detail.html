@@ -1,0 +1,18 @@
+
+<html>
+<head>
+
+ </head>
+<body> 
+		
+	
+	 <p>click <a href="/">here</a> to home.</p>
+	 
+	 Title:{{n.title}}<br>
+	 Content:{{n.content|linebreaks}}<br><br>
+	 <button onclick="window.location='{% url 'edit' n.id %}'">Edit Record</button>
+	 <button onclick="window.location='{% url 'delete' n.id %}'">Delete Record</button>
+	
+	 
+</body>
+</html>	 

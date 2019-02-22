@@ -1,0 +1,121 @@
+
+{% extends 'base.html' %}
+{% block content %}
+ <!--<section id="showcase-inner" class="py-5">&ndash;&gt;-->
+    <!--<div class="container">-->
+      <!--<div class="row text-center">-->
+        <!--<div class="col-md-12">-->
+          <!--<h3>User Dashboard</h3>-->
+          <!--<p class="lead">Manage your BT Real Estate account</p>-->
+        <!--</div>-->
+      <!--</div>-->
+    <!--</div>-->
+  <!--</section>-->
+
+  <!-- Breadcrumb -->
+<br><br><br>
+  <section id="bc" class="mt-3">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="{% url 'index' %}">
+              <i class="fas fa-home"></i> Home</a>
+          </li>
+          <li class="breadcrumb-item active"> Dashboard</li>
+        </ol>
+      </nav>
+    </div>
+  </section>
+
+  <!-- user details -->
+   <section id="user-details" class="py-4">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+          <h3>Welcome {{ object.username }}</h3><br>
+          <img src="{{ object.photo.url }}" class="img-circle inline"width="220" height="200" style=" border-radius: 50%">
+          </div>
+        </div>
+       </div>
+   </section>
+
+   <section id="dashboard" class="py-4">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Username:</th>
+                <td>{{ object.username }}</td>
+              </tr>
+              <tr>
+                <th scope="col">User's first name:</th>
+                <td>{{ object.first_name }}</td>
+              </tr>
+              <tr>
+                <th scope="col">User's last name:</th>
+                <td>{{ object.last_name }}</td>
+              </tr>
+              <tr>
+                <th scope="col">User's Email ID:</th>
+                <td>{{ object.email }}</td>
+              </tr>
+              <tr>
+                <th scope="col">User's description:</th>
+                <td>{{ object.description }}</td>
+              </tr>
+            </thead>
+           </table>
+        </div>
+      </div>
+     </div>
+    </section>
+   <!-- buyer details -->
+    <section  class="py-4">
+      <div class="row justify-content-center">
+      <a class="btn btn-warning col-md-3 active text-white" href="">Update details</a>
+      </div>
+      </section>
+
+      {% if object.is_seller %}
+      <section  class="py-4">
+        <div class="container">
+          <div class="row justify-content-center">
+            <a class="col-md-4 btn btn-success active text-white" href="#">Post NEW property</a>
+              <div class="col-md-12">
+                <br><br>
+                <p>Seller's details</p>
+              </div>
+          </div>
+        </div>
+      </section>
+      {% else %}
+      <section  class="py-4">
+       <div class="container">
+         <div class="row justify-content-center">
+          <div class="col-md-12">
+            <br><br>
+            <p>Here are the property listings that you have inquired about</p>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Property that you list</th>
+
+                  </tr>
+                </thead>
+              </table>
+          </div>
+         </div>
+       </div>
+      </section>
+        {% endif %}
+{% endblock %}
+
+
+
+
+
+

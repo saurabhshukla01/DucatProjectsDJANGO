@@ -1,0 +1,21 @@
+<html>
+<head>
+
+
+</head>
+<body>
+<form action="" method='post'>
+{% csrf_token %}
+{{regform.as_p}}
+{{profile_form.as_p}}
+<button type="submit">Save</button>
+</form>
+
+<a href='/home/'>Next page</a>
+
+
+
+
+</body>
+
+</html>

@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+<form action='' class='col-md-5' method="POST">
+{% csrf_token %}
+    {{form}}
+	<br>
+	<input type='submit' value='Register' class='btn btn-default'> 
+</form>
+{% endblock %}

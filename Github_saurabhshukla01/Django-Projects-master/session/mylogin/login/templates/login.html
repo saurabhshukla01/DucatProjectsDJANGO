@@ -1,0 +1,18 @@
+
+
+{% block content %}
+       {% if form.error %}
+	    <p>Your username & password are not correct..</p>
+		{% endif %}
+		<form method="post" action="/accounts/auth/">{% csrf_token %}
+		    <table border="0">
+			   <tr><th><label for="id_username">Username:</label></th><td>
+			   <input type="text" name="username" value="" id="username"></td></tr>
+			   <tr><th><label for="id_password">Password:</label></th>
+			   <td><input type="password" name="password" value="" id="password"></td></tr>
+			</table>
+            <input type="submit" value="Login" />
+            
+	    </form>
+     <a href="/accounts/register">Register</a>
+{% endblock %}	 

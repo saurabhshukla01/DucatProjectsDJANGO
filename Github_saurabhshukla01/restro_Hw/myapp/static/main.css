@@ -1,0 +1,49 @@
+.frame{
+    width: cover;
+}
+.header{
+    width: cover;
+    height: 170px;
+    background-color: crimson;
+    border-radius: 20px;
+}
+.logo1{
+    float: left;
+    padding-top: 25px;
+    padding-left: 50px;
+}
+.logo2{
+    float: right;
+}
+.datahead{
+    font-family: chiller;
+    font-size: 100px;
+    color: white;
+    padding-left: 530px;
+    padding-top: 30px;
+}
+.middle{
+    height: 500px;
+    width: cover;
+    background-color: chartreuse;
+}
+.adminloginform{
+    float: right;
+    border: 1px solid black;
+}
+.restrologinform{
+    float: left;
+    border: 1px solid black;
+}
+.footer{
+    height: 120px;
+    border-radius: 20px;
+    width: cover;
+    background-color: crimson;
+}
+.restroname{
+    font-size: 60px;
+    color: red;
+    text-decoration: none;
+    font-style: italic;
+}

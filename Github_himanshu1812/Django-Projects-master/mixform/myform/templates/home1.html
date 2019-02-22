@@ -1,0 +1,22 @@
+<html>
+<head>
+
+
+</head>
+<body>
+<h2>User Information</h2>
+{% for i in p %}
+Username:{{i.user.username}}<br>
+Email:{{i.user.email}}<br>
+Location:{{i.location}}<br>
+Job_title:{{i.job_title}}<br>
+<hr>
+{% endfor %}<br><br>
+<a href='/'>home page</a>
+
+
+
+
+</body>
+
+</html>

@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<table class="table table-striped table-bordered table-sm">  
+    <thead class="thead-dark">  
+    <tr>  
+        <th>Employee Name</th>  
+        <th>Employee Age</th>  
+        <th>Employee City</th>  
+        <th>Employee Dsg</th>  
+        <th>Actions</th>	
+    </tr>  
+    </thead> 
+         
+    <tbody>  
+{% for employee in object_list %}  
+    <tr>  
+        <td>{{ employee.ename }}</td>  
+        <td>{{ employee.eage }}</td>  
+        <td>{{ employee.ecity }}</td>  
+        <td>{{ employee.edsg }}</td>  
+  <td><a href="{% url 'delete' employee.id %}" class='btn btn-danger' >Delete</a>
+     <a href="{% url 'update' employee.id %}" class='btn btn-info' >UPDATE</a></td>
+     </tr>  
+{% endfor %}  
+    </tbody>  
+</table>  
+   <center>
+    <div>
+    <span>
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">
+			previous</a>
+        {% endif %}
+
+        <span>
+            <strong>Page {{ page_obj.number }} of 
+			{{ page_obj.paginator.num_pages }}.</strong>
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">
+			next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">
+			last &raquo;</a>
+        {% endif %}
+    </span>
+</div></center>
+<table class="table table-striped table-bordered table-sm">  
+    <thead class="thead-dark">  
+    <tr>  
+        <th>College Code</th>  
+        <th>College</th>  
+        <th>Actions</th>	
+    </tr>  
+    </thead> 
+         
+    <tbody>  
+{% for college in college_list %}  
+    <tr>  
+        <td>{{ college.college_code }}</td>  
+        <td>{{ college.college }}</td> 
+  <td><a href="{% url 'deletecollege' college.id %}" class='btn btn-danger' >Delete</a>
+     <a href="" class='btn btn-info' >UPDATE</a></td>
+     </tr>  
+{% endfor %}  
+    </tbody>  
+</table>
+<table class="table table-striped table-bordered table-sm">  
+    <thead class="thead-dark">  
+    <tr>  
+        <th>Name</th>  
+        <th>Roll No</th>  
+        <th>Age</th>  
+        <th>Gender</th>  
+        <th>College</th>  
+        <th>Actions</th>	
+    </tr>  
+    </thead> 
+         
+    <tbody>  
+{% for student in student_list %}  
+    <tr>  
+        <td>{{ student.name }}</td>  
+        <td>{{ student.roll_no }}</td>  
+        <td>{{ student.age }}</td>  
+        <td>{{ student.gender }}</td>  
+        <td>{{ student.college }}</td>  
+  <td><a href="" class='btn btn-danger' >Delete</a>
+     <a href="" class='btn btn-info' >UPDATE</a></td>
+     </tr>  
+{% endfor %}  
+    </tbody>  
+</table>  
+<h2><p>You have visited this page
+ {{nv}}
+ {% if nv == 1 %} 
+	time.
+ {% else %} 
+	times.
+ {% endif %}
+	</p></h2>
+<h3>{{request.session.items}}</h3>
+<h3>{{request.session.keys}}</h3>
+<p> The download will begin in <span id="countdowntimer">
+	{{request.session.get_expiry_age}}</span> Seconds</p>
+
+<script type="text/javascript">
+    var timeleft = {{request.session.get_expiry_age}};
+    var downloadTimer = setInterval(function(){
+    timeleft--;
+    document.getElementById("countdowntimer").textContent = timeleft;
+    if(timeleft <= 0)
+        clearInterval(downloadTimer);
+    },1000);
+</script>
+{% endblock %}

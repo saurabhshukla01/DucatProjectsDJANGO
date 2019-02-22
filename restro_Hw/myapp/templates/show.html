@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div>
+        {% for x in showobj %}
+            <a href="{% url 'additemform' %}" class="restroname">{{x.first_name}} <br></a>
+        {% endfor %}
+    </div>
+
+{% endblock %}

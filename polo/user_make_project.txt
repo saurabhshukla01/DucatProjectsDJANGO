@@ -1,0 +1,13 @@
+django project make it by user ...??
+
+1.   django-admin startproject projectname           #(user choice like that == cricket)
+2.   cd projectname
+3.   python manage.py runserver
+4.   python manage.py startapp demo/apps      #(userchoice app name .)
+5.   python manage.py migrate
+6.   python manage.py make migrations apps
+7.   python manage.py migrate app
+8.   python manage.py migrate
+9.   python manage.py shell 
+
+===>>>>    run to shell command line ...

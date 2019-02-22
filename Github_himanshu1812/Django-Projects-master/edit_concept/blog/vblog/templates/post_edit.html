@@ -1,0 +1,10 @@
+<html>
+<head></head>
+<body>
+
+<form method="post" action='/postupdate/edit/{{instance.id}}/'> {% csrf_token %}
+{{form.as_p}}
+<input type='submit' value="save post" />
+</form>
+</body>
+</html>

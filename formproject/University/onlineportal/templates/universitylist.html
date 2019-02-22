@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="list-group">
+    {% for University in Universities %}
+    <div style="border: 2px solid black;">   
+    <label>University  Name :   <a href="{% url 'universodetail' University.id %}" class="list-group-item">{{University.University_name}}</a></label>
+        <img src="{{University.University_image.url}}" height="150px" width="150px">
+     <label>University location   <a class="list-group-item">{{University.University_location}}</a>        </label>
+    </div>
+        {% endfor %}
+  </div>
+
+  {{Universities.paginator.page_range}}
+  <center>
+   <div>
+   <span>
+       {% if Universities.has_previous %}
+           <a href="?page=1">&laquo; first</a>
+           <a href="?page={{ Universities.previous_page_number }}">previous</a>
+       {% endif %}
+
+       <span>
+           <strong>Page {{ Universities.number }} of {{ Universities.paginator.num_pages }}.</strong>
+       </span>
+
+       {% if Universities.has_next %}
+           <a href="?page={{ Universities.next_page_number }}">next</a>
+           <a href="?page={{ Universities.paginator.num_pages }}">last &raquo;</a>
+       {% endif %}
+   </span>
+</div></center>
+{% endblock %}

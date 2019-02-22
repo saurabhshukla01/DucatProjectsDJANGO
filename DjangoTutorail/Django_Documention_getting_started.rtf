@@ -1,0 +1,2256 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil\fcharset0 Arial;}{\f1\fnil Arial;}}
+{\colortbl ;\red255\green0\blue0;\red0\green0\blue0;\red0\green0\blue255;}
+{\*\generator Riched20 10.0.17134}\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\cf1\fs24\lang9 #   DJANGO  DOCUMENTION  CREATE  A GEETTING STARTED  DJANGO....*****\par
+   ****************************** page  0  ****************************\par
+\par
+Getting started\'b6\par
+New to Django? Or to Web development in general? Well, you came to the right place: read this material to quickly get up and running.\par
+Django at a glance\par
+Quick install guide\par
+Writing your first Django app, part 1\par
+Writing your first Django app, part 2\par
+Writing your first Django app, part 3\par
+Writing your first Django app, part 4\par
+Writing your first Django app, part 5\par
+Writing your first Django app, part 6\par
+Writing your first Django app, part 7\par
+Advanced tutorial: How to write reusable apps\par
+What to read next\par
+Writing your first patch for Django\cf2\par
+\par
+\par
+\par
+                                                  **************  page 1 ..... **********\par
+\par
+\par
+Django at a glance\'b6\par
+Because Django was developed in a fast-paced newsroom environment, it was designed to make common Web-development tasks fast and easy. Here\rquote s an informal overview of how to write a database-driven Web app with Django.\par
+The goal of this document is to give you enough technical specifics to understand how Django works, but this isn\rquote t intended to be a tutorial or reference \f1\endash\f0  but we\f1\rquote\f0 ve got both! When you\f1\rquote\f0 re ready to start a project, you can start with the tutorial or dive right into more detailed documentation.\par
+Design your model\'b6\par
+Although you can use Django without a database, it comes with an object-relational mapper in which you describe your database layout in Python code.\par
+The data-model syntax offers many rich ways of representing your models \f1\endash\f0  so far, it\f1\rquote\f0 s been solving many years\f1\rquote\f0  worth of database-schema problems. Here\f1\rquote\f0 s a quick example:\par
+mysite/news/models.py\'b6\par
+\par
+from django.db import models\par
+\par
+class Reporter(models.Model):\par
+    full_name = models.CharField(max_length=70)\par
+\par
+    def __str__(self):\par
+        return self.full_name\par
+\par
+class Article(models.Model):\par
+    pub_date = models.DateField()\par
+    headline = models.CharField(max_length=200)\par
+    content = models.TextField()\par
+    reporter = models.ForeignKey(Reporter, on_delete=models.CASCADE)\par
+\par
+    def __str__(self):\par
+        return self.headline\par
+Install it\'b6\par
+Next, run the Django command-line utility to create the database tables automatically:\par
+?/? ? \par
+$ python manage.py migrate\par
+The migrate command looks at all your available models and creates tables in your database for whichever tables don\rquote t already exist, as well as optionally providing much richer schema control.\par
+Enjoy the free API\'b6\par
+With that, you\rquote ve got a free, and rich, Python API to access your data. The API is created on the fly, no code generation necessary:\par
+# Import the models we created from our "news" app\par
+>>> from news.models import Article, Reporter\par
+\par
+# No reporters are in the system yet.\par
+>>> Reporter.objects.all()\par
+<QuerySet []>\par
+\par
+# Create a new Reporter.\par
+>>> r = Reporter(full_name='John Smith')\par
+\par
+# Save the object into the database. You have to call save() explicitly.\par
+>>> r.save()\par
+\par
+# Now it has an ID.\par
+>>> r.id\par
+1\par
+\par
+# Now the new reporter is in the database.\par
+>>> Reporter.objects.all()\par
+<QuerySet [<Reporter: John Smith>]>\par
+\par
+# Fields are represented as attributes on the Python object.\par
+>>> r.full_name\par
+'John Smith'\par
+\par
+# Django provides a rich database lookup API.\par
+>>> Reporter.objects.get(id=1)\par
+<Reporter: John Smith>\par
+>>> Reporter.objects.get(full_name__startswith='John')\par
+<Reporter: John Smith>\par
+>>> Reporter.objects.get(full_name__contains='mith')\par
+<Reporter: John Smith>\par
+>>> Reporter.objects.get(id=2)\par
+Traceback (most recent call last):\par
+    ...\par
+DoesNotExist: Reporter matching query does not exist.\par
+\par
+# Create an article.\par
+>>> from datetime import date\par
+>>> a = Article(pub_date=date.today(), headline='Django is cool',\par
+...     content='Yeah.', reporter=r)\par
+>>> a.save()\par
+\par
+# Now the article is in the database.\par
+>>> Article.objects.all()\par
+<QuerySet [<Article: Django is cool>]>\par
+\par
+# Article objects get API access to related Reporter objects.\par
+>>> r = a.reporter\par
+>>> r.full_name\par
+'John Smith'\par
+\par
+# And vice versa: Reporter objects get API access to Article objects.\par
+>>> r.article_set.all()\par
+<QuerySet [<Article: Django is cool>]>\par
+\par
+# The API follows relationships as far as you need, performing efficient\par
+# JOINs for you behind the scenes.\par
+# This finds all articles by a reporter whose name starts with "John".\par
+>>> Article.objects.filter(reporter__full_name__startswith='John')\par
+<QuerySet [<Article: Django is cool>]>\par
+\par
+# Change an object by altering its attributes and calling save().\par
+>>> r.full_name = 'Billy Goat'\par
+>>> r.save()\par
+\par
+# Delete an object with delete().\par
+>>> r.delete()\par
+A dynamic admin interface: it\rquote s not just scaffolding \f1\endash\f0  it\f1\rquote\f0 s the whole house\'b6\par
+Once your models are defined, Django can automatically create a professional, production ready administrative interface \f1\endash\f0  a website that lets authenticated users add, change and delete objects. It\f1\rquote\f0 s as easy as registering your model in the admin site:\par
+mysite/news/models.py\'b6\par
+\par
+from django.db import models\par
+\par
+class Article(models.Model):\par
+    pub_date = models.DateField()\par
+    headline = models.CharField(max_length=200)\par
+    content = models.TextField()\par
+    reporter = models.ForeignKey(Reporter, on_delete=models.CASCADE)\par
+mysite/news/admin.py\'b6\par
+\par
+from django.contrib import admin\par
+\par
+from . import models\par
+\par
+admin.site.register(models.Article)\par
+The philosophy here is that your site is edited by a staff, or a client, or maybe just you \f1\endash\f0  and you don\f1\rquote\f0 t want to have to deal with creating backend interfaces just to manage content.\par
+One typical workflow in creating Django apps is to create models and get the admin sites up and running as fast as possible, so your staff (or clients) can start populating data. Then, develop the way data is presented to the public.\par
+Design your URLs\'b6\par
+A clean, elegant URL scheme is an important detail in a high-quality Web application. Django encourages beautiful URL design and doesn\rquote t put any cruft in URLs, like .php or .asp.\par
+To design URLs for an app, you create a Python module called a URLconf. A table of contents for your app, it contains a simple mapping between URL patterns and Python callback functions. URLconfs also serve to decouple URLs from Python code.\par
+Here\rquote s what a URLconf might look like for the Reporter/Article example above:\par
+mysite/news/urls.py\'b6\par
+\par
+from django.urls import path\par
+\par
+from . import views\par
+\par
+urlpatterns = [\par
+    path('articles/<int:year>/', views.year_archive),\par
+    path('articles/<int:year>/<int:month>/', views.month_archive),\par
+    path('articles/<int:year>/<int:month>/<int:pk>/', views.article_detail),\par
+]\par
+The code above maps URL paths to Python callback functions (\ldblquote views\rdblquote ). The path strings use parameter tags to \ldblquote capture\rdblquote  values from the URLs. When a user requests a page, Django runs through each path, in order, and stops at the first one that matches the requested URL. (If none of them matches, Django calls a special-case 404 view.) This is blazingly fast, because the paths are compiled into regular expressions at load time.\par
+Once one of the URL patterns matches, Django calls the given view, which is a Python function. Each view gets passed a request object \f1\endash\f0  which contains request metadata \f1\endash\f0  and the values captured in the pattern.\par
+For example, if a user requested the URL \f1\ldblquote\f0 /articles/2005/05/39323/\f1\rdblquote\f0 , Django would call the function news.views.article_detail(request, year=2005, month=5, pk=39323).\par
+Write your views\'b6\par
+Each view is responsible for doing one of two things: Returning an HttpResponse object containing the content for the requested page, or raising an exception such as Http404. The rest is up to you.\par
+Generally, a view retrieves data according to the parameters, loads a template and renders the template with the retrieved data. Here\rquote s an example view for year_archive from above:\par
+mysite/news/views.py\'b6\par
+\par
+from django.shortcuts import render\par
+\par
+from .models import Article\par
+\par
+def year_archive(request, year):\par
+    a_list = Article.objects.filter(pub_date__year=year)\par
+    context = \{'year': year, 'article_list': a_list\}\par
+    return render(request, 'news/year_archive.html', context)\par
+This example uses Django\rquote s template system, which has several powerful features but strives to stay simple enough for non-programmers to use.\par
+Design your templates\'b6\par
+The code above loads the news/year_archive.html template.\par
+Django has a template search path, which allows you to minimize redundancy among templates. In your Django settings, you specify a list of directories to check for templates with DIRS. If a template doesn\rquote t exist in the first directory, it checks the second, and so on.\par
+Let\rquote s say the news/year_archive.html template was found. Here\rquote s what that might look like:\par
+mysite/news/templates/news/year_archive.html\'b6\par
+\par
+\{% extends "base.html" %\}\par
+\par
+\{% block title %\}Articles for \{\{ year \}\}\{% endblock %\}\par
+\par
+\{% block content %\}\par
+<h1>Articles for \{\{ year \}\}</h1>\par
+\par
+\{% for article in article_list %\}\par
+    <p>\{\{ article.headline \}\}</p>\par
+    <p>By \{\{ article.reporter.full_name \}\}</p>\par
+    <p>Published \{\{ article.pub_date|date:"F j, Y" \}\}</p>\par
+\{% endfor %\}\par
+\{% endblock %\}\par
+Variables are surrounded by double-curly braces. \{\{ article.headline \}\} means \ldblquote Output the value of the article\rquote s headline attribute.\rdblquote  But dots aren\rquote t used only for attribute lookup. They also can do dictionary-key lookup, index lookup and function calls.\par
+Note \{\{ article.pub_date|date:"F j, Y" \}\} uses a Unix-style \ldblquote pipe\rdblquote  (the \ldblquote |\rdblquote  character). This is called a template filter, and it\rquote s a way to filter the value of a variable. In this case, the date filter formats a Python datetime object in the given format (as found in PHP\rquote s date function).\par
+You can chain together as many filters as you\rquote d like. You can write custom template filters. You can write custom template tags, which run custom Python code behind the scenes.\par
+Finally, Django uses the concept of \ldblquote template inheritance\rdblquote . That\rquote s what the \{% extends "base.html" %\} does. It means \ldblquote First load the template called \lquote base\rquote , which has defined a bunch of blocks, and fill the blocks with the following blocks.\rdblquote  In short, that lets you dramatically cut down on redundancy in templates: each template has to define only what\rquote s unique to that template.\par
+Here\rquote s what the \ldblquote base.html\rdblquote  template, including the use of static files, might look like:\par
+mysite/templates/base.html\'b6\par
+\par
+\{% load static %\}\par
+<html>\par
+<head>\par
+    <title>\{% block title %\}\{% endblock %\}</title>\par
+</head>\par
+<body>\par
+    <img src="\{% static "images/sitelogo.png" %\}" alt="Logo">\par
+    \{% block content %\}\{% endblock %\}\par
+</body>\par
+</html>\par
+Simplistically, it defines the look-and-feel of the site (with the site\rquote s logo), and provides \ldblquote holes\rdblquote  for child templates to fill. This makes a site redesign as easy as changing a single file \f1\endash\f0  the base template.\par
+It also lets you create multiple versions of a site, with different base templates, while reusing child templates. Django\f1\rquote\f0 s creators have used this technique to create strikingly different mobile versions of sites \f1\endash\f0  simply by creating a new base template.\par
+Note that you don\f1\rquote\f0 t have to use Django\f1\rquote\f0 s template system if you prefer another system. While Django\f1\rquote\f0 s template system is particularly well-integrated with Django\f1\rquote\f0 s model layer, nothing forces you to use it. For that matter, you don\f1\rquote\f0 t have to use Django\f1\rquote\f0 s database API, either. You can use another database abstraction layer, you can read XML files, you can read files off disk, or anything you want. Each piece of Django \f1\endash\f0  models, views, templates \f1\endash\f0  is decoupled from the next.\par
+This is just the surface\'b6\par
+This has been only a quick overview of Django\rquote s functionality. Some more useful features:\par
+A caching framework that integrates with memcached or other backends.\par
+A syndication framework that makes creating RSS and Atom feeds as easy as writing a small Python class.\par
+More sexy automatically-generated admin features \f1\endash\f0  this overview barely scratched the surface.\par
+The next obvious steps are for you to download Django, read the tutorial and join the community. Thanks for your interest!\par
+\par
+\par
+\par
+\par
+\par
+  *********************  page 2 ***************\par
+\par
+\par
+\par
+\par
+Quick install guide\'b6\par
+Before you can use Django, you\rquote ll need to get it installed. We have a complete installation guide that covers all the possibilities; this guide will guide you to a simple, minimal installation that\rquote ll work while you walk through the introduction.\par
+Install Python\'b6\par
+Being a Python Web framework, Django requires Python. See What Python version can I use with Django? for details. Python includes a lightweight database called SQLite so you won\rquote t need to set up a database just yet.\par
+Get the latest version of Python at {{\field{\*\fldinst{HYPERLINK https://www.python.org/downloads/ }}{\fldrslt{https://www.python.org/downloads/\ul0\cf0}}}}\f0\fs24  or with your operating system\rquote s package manager.\par
+You can verify that Python is installed by typing python from your shell; you should see something like:\par
+Python 3.x.y\par
+[GCC 4.x] on linux\par
+Type "help", "copyright", "credits" or "license" for more information.\par
+>>>\par
+Set up a database\'b6\par
+This step is only necessary if you\rquote d like to work with a \ldblquote large\rdblquote  database engine like PostgreSQL, MySQL, or Oracle. To install such a database, consult the database installation information.\par
+Install Django\'b6\par
+You\rquote ve got three easy options to install Django:\par
+Install an official release. This is the best approach for most users.\par
+Install a version of Django provided by your operating system distribution.\par
+Install the latest development version. This option is for enthusiasts who want the latest-and-greatest features and aren\rquote t afraid of running brand new code. You might encounter new bugs in the development version, but reporting them helps the development of Django. Also, releases of third-party packages are less likely to be compatible with the development version than with the latest stable release.\par
+Always refer to the documentation that corresponds to the version of Django you\rquote re using!\par
+If you do either of the first two steps, keep an eye out for parts of the documentation marked new in development version. That phrase flags features that are only available in development versions of Django, and they likely won\rquote t work with an official release.\par
+Verifying\'b6\par
+To verify that Django can be seen by Python, type python from your shell. Then at the Python prompt, try to import Django:\par
+>>> import django\par
+>>> print(django.get_version())\par
+2.1\par
+You may have another version of Django installed.\par
+That\rquote s it!\'b6\par
+That\rquote s it \f1\endash\f0  you can now move onto the tutorial.\par
+\par
+\par
+\par
+*************************    page 3  **********************\par
+\par
+\par
+\par
+Writing your first Django app, part 1\'b6\par
+Let\rquote s learn by example.\par
+Throughout this tutorial, we\rquote ll walk you through the creation of a basic poll application.\par
+It\rquote ll consist of two parts:\par
+A public site that lets people view polls and vote in them.\par
+An admin site that lets you add, change, and delete polls.\par
+We\rquote ll assume you have Django installed already. You can tell Django is installed and which version by running the following command in a shell prompt (indicated by the $ prefix):\par
+?/? ? \par
+$ python -m django --version\par
+If Django is installed, you should see the version of your installation. If it isn\rquote t, you\rquote ll get an error telling \ldblquote No module named django\rdblquote .\par
+This tutorial is written for Django 2.1, which supports Python 3.5 and later. If the Django version doesn\rquote t match, you can refer to the tutorial for your version of Django by using the version switcher at the bottom right corner of this page, or update Django to the newest version. If you\rquote re using an older version of Python, check What Python version can I use with Django? to find a compatible version of Django.\par
+See How to install Django for advice on how to remove older versions of Django and install a newer one.\par
+Where to get help:\par
+If you\rquote re having trouble going through this tutorial, please post a message to django-users or drop by #django on irc.freenode.net to chat with other Django users who might be able to help.\par
+Creating a project\'b6\par
+If this is your first time using Django, you\rquote ll have to take care of some initial setup. Namely, you\rquote ll need to auto-generate some code that establishes a Django project \f1\endash\f0  a collection of settings for an instance of Django, including database configuration, Django-specific options and application-specific settings.\par
+From the command line, cd into a directory where you\f1\rquote\f0 d like to store your code, then run the following command:\par
+?/? ? \par
+$ django-admin startproject mysite\par
+This will create a mysite directory in your current directory. If it didn\f1\rquote\f0 t work, see Problems running django-admin.\par
+Note\par
+You\f1\rquote\f0 ll need to avoid naming projects after built-in Python or Django components. In particular, this means you should avoid using names like django (which will conflict with Django itself) or test (which conflicts with a built-in Python package).\par
+Where should this code live?\par
+If your background is in plain old PHP (with no use of modern frameworks), you\f1\rquote\f0 re probably used to putting code under the Web server\f1\rquote\f0 s document root (in a place such as /var/www). With Django, you don\f1\rquote\f0 t do that. It\f1\rquote\f0 s not a good idea to put any of this Python code within your Web server\f1\rquote\f0 s document root, because it risks the possibility that people may be able to view your code over the Web. That\f1\rquote\f0 s not good for security.\par
+Put your code in some directory outside of the document root, such as /home/mycode.\par
+Let\f1\rquote\f0 s look at what startproject created:\par
+mysite/\par
+    manage.py\par
+    mysite/\par
+        __init__.py\par
+        settings.py\par
+        urls.py\par
+        wsgi.py\par
+These files are:\par
+The outer mysite/ root directory is just a container for your project. Its name doesn\f1\rquote\f0 t matter to Django; you can rename it to anything you like.\par
+manage.py: A command-line utility that lets you interact with this Django project in various ways. You can read all the details about manage.py in django-admin and manage.py.\par
+The inner mysite/ directory is the actual Python package for your project. Its name is the Python package name you\f1\rquote\f0 ll need to use to import anything inside it (e.g. mysite.urls).\par
+mysite/__init__.py: An empty file that tells Python that this directory should be considered a Python package. If you\f1\rquote\f0 re a Python beginner, read more about packages in the official Python docs.\par
+mysite/settings.py: Settings/configuration for this Django project. Django settings will tell you all about how settings work.\par
+mysite/urls.py: The URL declarations for this Django project; a \f1\ldblquote\f0 table of contents\f1\rdblquote\f0  of your Django-powered site. You can read more about URLs in URL dispatcher.\par
+mysite/wsgi.py: An entry-point for WSGI-compatible web servers to serve your project. See How to deploy with WSGI for more details.\par
+The development server\'b6\par
+Let\rquote s verify your Django project works. Change into the outer mysite directory, if you haven\rquote t already, and run the following commands:\par
+?/? ? \par
+$ python manage.py runserver\par
+You\rquote ll see the following output on the command line:\par
+Performing system checks...\par
+\par
+System check identified no issues (0 silenced).\par
+\par
+You have unapplied migrations; your app may not work properly until they are applied.\par
+Run 'python manage.py migrate' to apply them.\par
+\par
+January 04, 2019 - 15:50:53\par
+Django version 2.1, using settings 'mysite.settings'\par
+Starting development server at {{\field{\*\fldinst{HYPERLINK http://127.0.0.1:8000/ }}{\fldrslt{http://127.0.0.1:8000/\ul0\cf0}}}}\f0\fs24\par
+Quit the server with CONTROL-C.\par
+Note\par
+Ignore the warning about unapplied database migrations for now; we\rquote ll deal with the database shortly.\par
+You\rquote ve started the Django development server, a lightweight Web server written purely in Python. We\rquote ve included this with Django so you can develop things rapidly, without having to deal with configuring a production server \f1\endash\f0  such as Apache \f1\endash\f0  until you\f1\rquote\f0 re ready for production.\par
+Now\f1\rquote\f0 s a good time to note: don\f1\rquote\f0 t use this server in anything resembling a production environment. It\f1\rquote\f0 s intended only for use while developing. (We\f1\rquote\f0 re in the business of making Web frameworks, not Web servers.)\par
+Now that the server\f1\rquote\f0 s running, visit {{\field{\*\fldinst{HYPERLINK http://127.0.0.1:8000/ }}{\fldrslt{http://127.0.0.1:8000/\ul0\cf0}}}}\f0\fs24  with your Web browser. You\f1\rquote\f0 ll see a \f1\ldblquote\f0 Congratulations!\f1\rdblquote\f0  page, with a rocket taking off. It worked!\par
+Changing the port\par
+By default, the runserver command starts the development server on the internal IP at port 8000.\par
+If you want to change the server\f1\rquote\f0 s port, pass it as a command-line argument. For instance, this command starts the server on port 8080:\par
+?/? ? \par
+$ python manage.py runserver 8080\par
+If you want to change the server\f1\rquote\f0 s IP, pass it along with the port. For example, to listen on all available public IPs (which is useful if you are running Vagrant or want to show off your work on other computers on the network), use:\par
+?/? ? \par
+$ python manage.py runserver 0:8000\par
+0 is a shortcut for 0.0.0.0. Full docs for the development server can be found in the runserver reference.\par
+Automatic reloading of runserver\par
+The development server automatically reloads Python code for each request as needed. You don\f1\rquote\f0 t need to restart the server for code changes to take effect. However, some actions like adding files don\f1\rquote\f0 t trigger a restart, so you\f1\rquote\f0 ll have to restart the server in these cases.\par
+Creating the Polls app\'b6\par
+Now that your environment \f1\endash\f0  a \f1\ldblquote\f0 project\f1\rdblquote\f0  \f1\endash\f0  is set up, you\f1\rquote\f0 re set to start doing work.\par
+Each application you write in Django consists of a Python package that follows a certain convention. Django comes with a utility that automatically generates the basic directory structure of an app, so you can focus on writing code rather than creating directories.\par
+Projects vs. apps\par
+What\f1\rquote\f0 s the difference between a project and an app? An app is a Web application that does something \f1\endash\f0  e.g., a Weblog system, a database of public records or a simple poll app. A project is a collection of configuration and apps for a particular website. A project can contain multiple apps. An app can be in multiple projects.\par
+Your apps can live anywhere on your Python path. In this tutorial, we\f1\rquote\f0 ll create our poll app right next to your manage.py file so that it can be imported as its own top-level module, rather than a submodule of mysite.\par
+To create your app, make sure you\f1\rquote\f0 re in the same directory as manage.py and type this command:\par
+?/? ? \par
+$ python manage.py startapp polls\par
+That\f1\rquote\f0 ll create a directory polls, which is laid out like this:\par
+polls/\par
+    __init__.py\par
+    admin.py\par
+    apps.py\par
+    migrations/\par
+        __init__.py\par
+    models.py\par
+    tests.py\par
+    views.py\par
+This directory structure will house the poll application.\par
+Write your first view\'b6\par
+Let\rquote s write the first view. Open the file polls/views.py and put the following Python code in it:\par
+polls/views.py\'b6\par
+\par
+from django.http import HttpResponse\par
+\par
+\par
+def index(request):\par
+    return HttpResponse("Hello, world. You're at the polls index.")\par
+This is the simplest view possible in Django. To call the view, we need to map it to a URL - and for this we need a URLconf.\par
+To create a URLconf in the polls directory, create a file called urls.py. Your app directory should now look like:\par
+polls/\par
+    __init__.py\par
+    admin.py\par
+    apps.py\par
+    migrations/\par
+        __init__.py\par
+    models.py\par
+    tests.py\par
+    urls.py\par
+    views.py\par
+In the polls/urls.py file include the following code:\par
+polls/urls.py\'b6\par
+\par
+from django.urls import path\par
+\par
+from . import views\par
+\par
+urlpatterns = [\par
+    path('', views.index, name='index'),\par
+]\par
+The next step is to point the root URLconf at the polls.urls module. In mysite/urls.py, add an import for django.urls.include and insert an include() in the urlpatterns list, so you have:\par
+mysite/urls.py\'b6\par
+\par
+from django.contrib import admin\par
+from django.urls import include, path\par
+\par
+urlpatterns = [\par
+    path('polls/', include('polls.urls')),\par
+    path('admin/', admin.site.urls),\par
+]\par
+The include() function allows referencing other URLconfs. Whenever Django encounters include(), it chops off whatever part of the URL matched up to that point and sends the remaining string to the included URLconf for further processing.\par
+The idea behind include() is to make it easy to plug-and-play URLs. Since polls are in their own URLconf (polls/urls.py), they can be placed under \ldblquote /polls/\rdblquote , or under \ldblquote /fun_polls/\rdblquote , or under \ldblquote /content/polls/\rdblquote , or any other path root, and the app will still work.\par
+When to use include()\par
+You should always use include() when you include other URL patterns. admin.site.urls is the only exception to this.\par
+You have now wired an index view into the URLconf. Lets verify it\rquote s working, run the following command:\par
+?/? ? \par
+$ python manage.py runserver\par
+Go to {{\field{\*\fldinst{HYPERLINK http://localhost:8000/polls/ }}{\fldrslt{http://localhost:8000/polls/\ul0\cf0}}}}\f0\fs24  in your browser, and you should see the text \ldblquote Hello, world. You\rquote re at the polls index.\rdblquote , which you defined in the index view.\par
+Page not found?\par
+If you get an error page here, check that you\rquote re going to {{\field{\*\fldinst{HYPERLINK http://localhost:8000/polls/ }}{\fldrslt{http://localhost:8000/polls/\ul0\cf0}}}}\f0\fs24  and not {{\field{\*\fldinst{HYPERLINK http://localhost:8000/ }}{\fldrslt{http://localhost:8000/\ul0\cf0}}}}\f0\fs24 .\par
+The path() function is passed four arguments, two required: route and view, and two optional: kwargs, and name. At this point, it\rquote s worth reviewing what these arguments are for.\par
+path() argument: route\'b6\par
+route is a string that contains a URL pattern. When processing a request, Django starts at the first pattern in urlpatterns and makes its way down the list, comparing the requested URL against each pattern until it finds one that matches.\par
+Patterns don\rquote t search GET and POST parameters, or the domain name. For example, in a request to {{\field{\*\fldinst{HYPERLINK https://www.example.com/myapp/ }}{\fldrslt{https://www.example.com/myapp/\ul0\cf0}}}}\f0\fs24 , the URLconf will look for myapp/. In a request to {{\field{\*\fldinst{HYPERLINK https://www.example.com/myapp/?page=3 }}{\fldrslt{https://www.example.com/myapp/?page=3\ul0\cf0}}}}\f0\fs24 , the URLconf will also look for myapp/.\par
+path() argument: view\'b6\par
+When Django finds a matching pattern, it calls the specified view function with an HttpRequest object as the first argument and any \ldblquote captured\rdblquote  values from the route as keyword arguments. We\rquote ll give an example of this in a bit.\par
+path() argument: kwargs\'b6\par
+Arbitrary keyword arguments can be passed in a dictionary to the target view. We aren\rquote t going to use this feature of Django in the tutorial.\par
+path() argument: name\'b6\par
+Naming your URL lets you refer to it unambiguously from elsewhere in Django, especially from within templates. This powerful feature allows you to make global changes to the URL patterns of your project while only touching a single file.\par
+When you\rquote re comfortable with the basic request and response flow, read part 2 of this tutorial to start working with the database.\par
+\cf1\par
+\par
+\par
+\par
+ *******************************  page 3  **************************\par
+\par
+\par
+\par
+Language: en \par
+Documentation version: 2.1 \par
+Writing your first Django app, part 2\'b6\par
+This tutorial begins where Tutorial 1 left off. We\rquote ll setup the database, create your first model, and get a quick introduction to Django\rquote s automatically-generated admin site.\par
+Database setup\'b6\par
+Now, open up mysite/settings.py. It\rquote s a normal Python module with module-level variables representing Django settings.\par
+By default, the configuration uses SQLite. If you\rquote re new to databases, or you\rquote re just interested in trying Django, this is the easiest choice. SQLite is included in Python, so you won\rquote t need to install anything else to support your database. When starting your first real project, however, you may want to use a more scalable database like PostgreSQL, to avoid database-switching headaches down the road.\par
+If you wish to use another database, install the appropriate database bindings and change the following keys in the DATABASES 'default' item to match your database connection settings:\par
+ENGINE \f1\endash\f0  Either 'django.db.backends.sqlite3', 'django.db.backends.postgresql', 'django.db.backends.mysql', or 'django.db.backends.oracle'. Other backends are also available.\par
+NAME \f1\endash\f0  The name of your database. If you\f1\rquote\f0 re using SQLite, the database will be a file on your computer; in that case, NAME should be the full absolute path, including filename, of that file. The default value, os.path.join(BASE_DIR, 'db.sqlite3'), will store the file in your project directory.\par
+If you are not using SQLite as your database, additional settings such as USER, PASSWORD, and HOST must be added. For more details, see the reference documentation for DATABASES.\par
+For databases other than SQLite\par
+If you\f1\rquote\f0 re using a database besides SQLite, make sure you\f1\rquote\f0 ve created a database by this point. Do that with \f1\ldblquote\f0 CREATE DATABASE database_name;\f1\rdblquote\f0  within your database\f1\rquote\f0 s interactive prompt.\par
+Also make sure that the database user provided in mysite/settings.py has \f1\ldblquote\f0 create database\f1\rdblquote\f0  privileges. This allows automatic creation of a test database which will be needed in a later tutorial.\par
+If you\f1\rquote\f0 re using SQLite, you don\f1\rquote\f0 t need to create anything beforehand - the database file will be created automatically when it is needed.\par
+While you\f1\rquote\f0 re editing mysite/settings.py, set TIME_ZONE to your time zone.\par
+Also, note the INSTALLED_APPS setting at the top of the file. That holds the names of all Django applications that are activated in this Django instance. Apps can be used in multiple projects, and you can package and distribute them for use by others in their projects.\par
+By default, INSTALLED_APPS contains the following apps, all of which come with Django:\par
+django.contrib.admin \f1\endash\f0  The admin site. You\f1\rquote\f0 ll use it shortly.\par
+django.contrib.auth \f1\endash\f0  An authentication system.\par
+django.contrib.contenttypes \f1\endash\f0  A framework for content types.\par
+django.contrib.sessions \f1\endash\f0  A session framework.\par
+django.contrib.messages \f1\endash\f0  A messaging framework.\par
+django.contrib.staticfiles \f1\endash\f0  A framework for managing static files.\par
+These applications are included by default as a convenience for the common case.\par
+Some of these applications make use of at least one database table, though, so we need to create the tables in the database before we can use them. To do that, run the following command:\par
+?/? ? \par
+$ python manage.py migrate\par
+The migrate command looks at the INSTALLED_APPS setting and creates any necessary database tables according to the database settings in your mysite/settings.py file and the database migrations shipped with the app (we\f1\rquote\f0 ll cover those later). You\f1\rquote\f0 ll see a message for each migration it applies. If you\f1\rquote\f0 re interested, run the command-line client for your database and type \\dt (PostgreSQL), SHOW TABLES; (MySQL), .schema (SQLite), or SELECT TABLE_NAME FROM USER_TABLES; (Oracle) to display the tables Django created.\par
+For the minimalists\par
+Like we said above, the default applications are included for the common case, but not everybody needs them. If you don\f1\rquote\f0 t need any or all of them, feel free to comment-out or delete the appropriate line(s) from INSTALLED_APPS before running migrate. The migrate command will only run migrations for apps in INSTALLED_APPS.\par
+Creating models\'b6\par
+Now we\rquote ll define your models \f1\endash\f0  essentially, your database layout, with additional metadata.\par
+Philosophy\par
+A model is the single, definitive source of truth about your data. It contains the essential fields and behaviors of the data you\f1\rquote\f0 re storing. Django follows the DRY Principle. The goal is to define your data model in one place and automatically derive things from it.\par
+This includes the migrations - unlike in Ruby On Rails, for example, migrations are entirely derived from your models file, and are essentially just a history that Django can roll through to update your database schema to match your current models.\par
+In our simple poll app, we\f1\rquote\f0 ll create two models: Question and Choice. A Question has a question and a publication date. A Choice has two fields: the text of the choice and a vote tally. Each Choice is associated with a Question.\par
+These concepts are represented by simple Python classes. Edit the polls/models.py file so it looks like this:\par
+polls/models.py\'b6\par
+\par
+from django.db import models\par
+\par
+\par
+class Question(models.Model):\par
+    question_text = models.CharField(max_length=200)\par
+    pub_date = models.DateTimeField('date published')\par
+\par
+\par
+class Choice(models.Model):\par
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)\par
+    choice_text = models.CharField(max_length=200)\par
+    votes = models.IntegerField(default=0)\par
+The code is straightforward. Each model is represented by a class that subclasses django.db.models.Model. Each model has a number of class variables, each of which represents a database field in the model.\par
+Each field is represented by an instance of a Field class \f1\endash\f0  e.g., CharField for character fields and DateTimeField for datetimes. This tells Django what type of data each field holds.\par
+The name of each Field instance (e.g. question_text or pub_date) is the field\f1\rquote\f0 s name, in machine-friendly format. You\f1\rquote\f0 ll use this value in your Python code, and your database will use it as the column name.\par
+You can use an optional first positional argument to a Field to designate a human-readable name. That\f1\rquote\f0 s used in a couple of introspective parts of Django, and it doubles as documentation. If this field isn\f1\rquote\f0 t provided, Django will use the machine-readable name. In this example, we\f1\rquote\f0 ve only defined a human-readable name for Question.pub_date. For all other fields in this model, the field\f1\rquote\f0 s machine-readable name will suffice as its human-readable name.\par
+Some Field classes have required arguments. CharField, for example, requires that you give it a max_length. That\f1\rquote\f0 s used not only in the database schema, but in validation, as we\f1\rquote\f0 ll soon see.\par
+A Field can also have various optional arguments; in this case, we\f1\rquote\f0 ve set the default value of votes to 0.\par
+Finally, note a relationship is defined, using ForeignKey. That tells Django each Choice is related to a single Question. Django supports all the common database relationships: many-to-one, many-to-many, and one-to-one.\par
+Activating models\'b6\par
+That small bit of model code gives Django a lot of information. With it, Django is able to:\par
+Create a database schema (CREATE TABLE statements) for this app.\par
+Create a Python database-access API for accessing Question and Choice objects.\par
+But first we need to tell our project that the polls app is installed.\par
+Philosophy\par
+Django apps are \ldblquote pluggable\rdblquote : You can use an app in multiple projects, and you can distribute apps, because they don\rquote t have to be tied to a given Django installation.\par
+To include the app in our project, we need to add a reference to its configuration class in the INSTALLED_APPS setting. The PollsConfig class is in the polls/apps.py file, so its dotted path is 'polls.apps.PollsConfig'. Edit the mysite/settings.py file and add that dotted path to the INSTALLED_APPS setting. It\rquote ll look like this:\par
+mysite/settings.py\'b6\par
+\par
+INSTALLED_APPS = [\par
+    'polls.apps.PollsConfig',\par
+    'django.contrib.admin',\par
+    'django.contrib.auth',\par
+    'django.contrib.contenttypes',\par
+    'django.contrib.sessions',\par
+    'django.contrib.messages',\par
+    'django.contrib.staticfiles',\par
+]\par
+Now Django knows to include the polls app. Let\rquote s run another command:\par
+?/? ? \par
+$ python manage.py makemigrations polls\par
+You should see something similar to the following:\par
+Migrations for 'polls':\par
+  polls/migrations/0001_initial.py:\par
+    - Create model Choice\par
+    - Create model Question\par
+    - Add field question to choice\par
+By running makemigrations, you\rquote re telling Django that you\rquote ve made some changes to your models (in this case, you\rquote ve made new ones) and that you\rquote d like the changes to be stored as a migration.\par
+Migrations are how Django stores changes to your models (and thus your database schema) - they\rquote re just files on disk. You can read the migration for your new model if you like; it\rquote s the file polls/migrations/0001_initial.py. Don\rquote t worry, you\rquote re not expected to read them every time Django makes one, but they\rquote re designed to be human-editable in case you want to manually tweak how Django changes things.\par
+There\rquote s a command that will run the migrations for you and manage your database schema automatically - that\rquote s called migrate, and we\rquote ll come to it in a moment - but first, let\rquote s see what SQL that migration would run. The sqlmigrate command takes migration names and returns their SQL:\par
+?/? ? \par
+$ python manage.py sqlmigrate polls 0001\par
+You should see something similar to the following (we\rquote ve reformatted it for readability):\par
+BEGIN;\par
+--\par
+-- Create model Choice\par
+--\par
+CREATE TABLE "polls_choice" (\par
+    "id" serial NOT NULL PRIMARY KEY,\par
+    "choice_text" varchar(200) NOT NULL,\par
+    "votes" integer NOT NULL\par
+);\par
+--\par
+-- Create model Question\par
+--\par
+CREATE TABLE "polls_question" (\par
+    "id" serial NOT NULL PRIMARY KEY,\par
+    "question_text" varchar(200) NOT NULL,\par
+    "pub_date" timestamp with time zone NOT NULL\par
+);\par
+--\par
+-- Add field question to choice\par
+--\par
+ALTER TABLE "polls_choice" ADD COLUMN "question_id" integer NOT NULL;\par
+ALTER TABLE "polls_choice" ALTER COLUMN "question_id" DROP DEFAULT;\par
+CREATE INDEX "polls_choice_7aa0f6ee" ON "polls_choice" ("question_id");\par
+ALTER TABLE "polls_choice"\par
+  ADD CONSTRAINT "polls_choice_question_id_246c99a640fbbd72_fk_polls_question_id"\par
+    FOREIGN KEY ("question_id")\par
+    REFERENCES "polls_question" ("id")\par
+    DEFERRABLE INITIALLY DEFERRED;\par
+\par
+COMMIT;\par
+Note the following:\par
+The exact output will vary depending on the database you are using. The example above is generated for PostgreSQL.\par
+Table names are automatically generated by combining the name of the app (polls) and the lowercase name of the model \f1\endash\f0  question and choice. (You can override this behavior.)\par
+Primary keys (IDs) are added automatically. (You can override this, too.)\par
+By convention, Django appends "_id" to the foreign key field name. (Yes, you can override this, as well.)\par
+The foreign key relationship is made explicit by a FOREIGN KEY constraint. Don\f1\rquote\f0 t worry about the DEFERRABLE parts; that\f1\rquote\f0 s just telling PostgreSQL to not enforce the foreign key until the end of the transaction.\par
+It\f1\rquote\f0 s tailored to the database you\f1\rquote\f0 re using, so database-specific field types such as auto_increment (MySQL), serial (PostgreSQL), or integer primary key autoincrement (SQLite) are handled for you automatically. Same goes for the quoting of field names \f1\endash\f0  e.g., using double quotes or single quotes.\par
+The sqlmigrate command doesn\f1\rquote\f0 t actually run the migration on your database - it just prints it to the screen so that you can see what SQL Django thinks is required. It\f1\rquote\f0 s useful for checking what Django is going to do or if you have database administrators who require SQL scripts for changes.\par
+If you\f1\rquote\f0 re interested, you can also run python manage.py check; this checks for any problems in your project without making migrations or touching the database.\par
+Now, run migrate again to create those model tables in your database:\par
+?/? ? \par
+$ python manage.py migrate\par
+Operations to perform:\par
+  Apply all migrations: admin, auth, contenttypes, polls, sessions\par
+Running migrations:\par
+  Rendering model states... DONE\par
+  Applying polls.0001_initial... OK\par
+The migrate command takes all the migrations that haven\f1\rquote\f0 t been applied (Django tracks which ones are applied using a special table in your database called django_migrations) and runs them against your database - essentially, synchronizing the changes you made to your models with the schema in the database.\par
+Migrations are very powerful and let you change your models over time, as you develop your project, without the need to delete your database or tables and make new ones - it specializes in upgrading your database live, without losing data. We\f1\rquote\f0 ll cover them in more depth in a later part of the tutorial, but for now, remember the three-step guide to making model changes:\par
+Change your models (in models.py).\par
+Run python manage.py makemigrations to create migrations for those changes\par
+Run python manage.py migrate to apply those changes to the database.\par
+The reason that there are separate commands to make and apply migrations is because you\f1\rquote\f0 ll commit migrations to your version control system and ship them with your app; they not only make your development easier, they\f1\rquote\f0 re also usable by other developers and in production.\par
+Read the django-admin documentation for full information on what the manage.py utility can do.\par
+Playing with the API\'b6\par
+Now, let\rquote s hop into the interactive Python shell and play around with the free API Django gives you. To invoke the Python shell, use this command:\par
+?/? ? \par
+$ python manage.py shell\par
+We\rquote re using this instead of simply typing \ldblquote python\rdblquote , because manage.py sets the DJANGO_SETTINGS_MODULE environment variable, which gives Django the Python import path to your mysite/settings.py file.\par
+Once you\rquote re in the shell, explore the database API:\par
+>>> from polls.models import Choice, Question  # Import the model classes we just wrote.\par
+\par
+# No questions are in the system yet.\par
+>>> Question.objects.all()\par
+<QuerySet []>\par
+\par
+# Create a new Question.\par
+# Support for time zones is enabled in the default settings file, so\par
+# Django expects a datetime with tzinfo for pub_date. Use timezone.now()\par
+# instead of datetime.datetime.now() and it will do the right thing.\par
+>>> from django.utils import timezone\par
+>>> q = Question(question_text="What's new?", pub_date=timezone.now())\par
+\par
+# Save the object into the database. You have to call save() explicitly.\par
+>>> q.save()\par
+\par
+# Now it has an ID.\par
+>>> q.id\par
+1\par
+\par
+# Access model field values via Python attributes.\par
+>>> q.question_text\par
+"What's new?"\par
+>>> q.pub_date\par
+datetime.datetime(2012, 2, 26, 13, 0, 0, 775217, tzinfo=<UTC>)\par
+\par
+# Change values by changing the attributes, then calling save().\par
+>>> q.question_text = "What's up?"\par
+>>> q.save()\par
+\par
+# objects.all() displays all the questions in the database.\par
+>>> Question.objects.all()\par
+<QuerySet [<Question: Question object (1)>]>\par
+Wait a minute. <Question: Question object (1)> isn\rquote t a helpful representation of this object. Let\rquote s fix that by editing the Question model (in the polls/models.py file) and adding a __str__() method to both Question and Choice:\par
+polls/models.py\'b6\par
+\par
+from django.db import models\par
+\par
+class Question(models.Model):\par
+    # ...\par
+    def __str__(self):\par
+        return self.question_text\par
+\par
+class Choice(models.Model):\par
+    # ...\par
+    def __str__(self):\par
+        return self.choice_text\par
+It\rquote s important to add __str__() methods to your models, not only for your own convenience when dealing with the interactive prompt, but also because objects\rquote  representations are used throughout Django\rquote s automatically-generated admin.\par
+Note these are normal Python methods. Let\rquote s add a custom method, just for demonstration:\par
+polls/models.py\'b6\par
+\par
+import datetime\par
+\par
+from django.db import models\par
+from django.utils import timezone\par
+\par
+\par
+class Question(models.Model):\par
+    # ...\par
+    def was_published_recently(self):\par
+        return self.pub_date >= timezone.now() - datetime.timedelta(days=1)\par
+Note the addition of import datetime and from django.utils import timezone, to reference Python\rquote s standard datetime module and Django\rquote s time-zone-related utilities in django.utils.timezone, respectively. If you aren\rquote t familiar with time zone handling in Python, you can learn more in the time zone support docs.\par
+Save these changes and start a new Python interactive shell by running python manage.py shell again:\par
+>>> from polls.models import Choice, Question\par
+\par
+# Make sure our __str__() addition worked.\par
+>>> Question.objects.all()\par
+<QuerySet [<Question: What's up?>]>\par
+\par
+# Django provides a rich database lookup API that's entirely driven by\par
+# keyword arguments.\par
+>>> Question.objects.filter(id=1)\par
+<QuerySet [<Question: What's up?>]>\par
+>>> Question.objects.filter(question_text__startswith='What')\par
+<QuerySet [<Question: What's up?>]>\par
+\par
+# Get the question that was published this year.\par
+>>> from django.utils import timezone\par
+>>> current_year = timezone.now().year\par
+>>> Question.objects.get(pub_date__year=current_year)\par
+<Question: What's up?>\par
+\par
+# Request an ID that doesn't exist, this will raise an exception.\par
+>>> Question.objects.get(id=2)\par
+Traceback (most recent call last):\par
+    ...\par
+DoesNotExist: Question matching query does not exist.\par
+\par
+# Lookup by a primary key is the most common case, so Django provides a\par
+# shortcut for primary-key exact lookups.\par
+# The following is identical to Question.objects.get(id=1).\par
+>>> Question.objects.get(pk=1)\par
+<Question: What's up?>\par
+\par
+# Make sure our custom method worked.\par
+>>> q = Question.objects.get(pk=1)\par
+>>> q.was_published_recently()\par
+True\par
+\par
+# Give the Question a couple of Choices. The create call constructs a new\par
+# Choice object, does the INSERT statement, adds the choice to the set\par
+# of available choices and returns the new Choice object. Django creates\par
+# a set to hold the "other side" of a ForeignKey relation\par
+# (e.g. a question's choice) which can be accessed via the API.\par
+>>> q = Question.objects.get(pk=1)\par
+\par
+# Display any choices from the related object set -- none so far.\par
+>>> q.choice_set.all()\par
+<QuerySet []>\par
+\par
+# Create three choices.\par
+>>> q.choice_set.create(choice_text='Not much', votes=0)\par
+<Choice: Not much>\par
+>>> q.choice_set.create(choice_text='The sky', votes=0)\par
+<Choice: The sky>\par
+>>> c = q.choice_set.create(choice_text='Just hacking again', votes=0)\par
+\par
+# Choice objects have API access to their related Question objects.\par
+>>> c.question\par
+<Question: What's up?>\par
+\par
+# And vice versa: Question objects get access to Choice objects.\par
+>>> q.choice_set.all()\par
+<QuerySet [<Choice: Not much>, <Choice: The sky>, <Choice: Just hacking again>]>\par
+>>> q.choice_set.count()\par
+3\par
+\par
+# The API automatically follows relationships as far as you need.\par
+# Use double underscores to separate relationships.\par
+# This works as many levels deep as you want; there's no limit.\par
+# Find all Choices for any question whose pub_date is in this year\par
+# (reusing the 'current_year' variable we created above).\par
+>>> Choice.objects.filter(question__pub_date__year=current_year)\par
+<QuerySet [<Choice: Not much>, <Choice: The sky>, <Choice: Just hacking again>]>\par
+\par
+# Let's delete one of the choices. Use delete() for that.\par
+>>> c = q.choice_set.filter(choice_text__startswith='Just hacking')\par
+>>> c.delete()\par
+For more information on model relations, see Accessing related objects. For more on how to use double underscores to perform field lookups via the API, see Field lookups. For full details on the database API, see our Database API reference.\par
+Introducing the Django Admin\'b6\par
+Philosophy\par
+Generating admin sites for your staff or clients to add, change, and delete content is tedious work that doesn\rquote t require much creativity. For that reason, Django entirely automates creation of admin interfaces for models.\par
+Django was written in a newsroom environment, with a very clear separation between \ldblquote content publishers\rdblquote  and the \ldblquote public\rdblquote  site. Site managers use the system to add news stories, events, sports scores, etc., and that content is displayed on the public site. Django solves the problem of creating a unified interface for site administrators to edit content.\par
+The admin isn\rquote t intended to be used by site visitors. It\rquote s for site managers.\par
+Creating an admin user\'b6\par
+First we\rquote ll need to create a user who can login to the admin site. Run the following command:\par
+?/? ? \par
+$ python manage.py createsuperuser\par
+Enter your desired username and press enter.\par
+Username: admin\par
+You will then be prompted for your desired email address:\par
+Email address: admin@example.com\par
+The final step is to enter your password. You will be asked to enter your password twice, the second time as a confirmation of the first.\par
+Password: **********\par
+Password (again): *********\par
+Superuser created successfully.\par
+Start the development server\'b6\par
+The Django admin site is activated by default. Let\rquote s start the development server and explore it.\par
+If the server is not running start it like so:\par
+?/? ? \par
+$ python manage.py runserver\par
+Now, open a Web browser and go to \ldblquote /admin/\rdblquote  on your local domain \f1\endash\f0  e.g., {\cf0{\field{\*\fldinst{HYPERLINK http://127.0.0.1:8000/admin/ }}{\fldrslt{http://127.0.0.1:8000/admin/\ul0\cf0}}}}\f0\fs24 . You should see the admin\f1\rquote\f0 s login screen:\par
+ \par
+Since translation is turned on by default, the login screen may be displayed in your own language, depending on your browser\f1\rquote\f0 s settings and if Django has a translation for this language.\par
+Enter the admin site\'b6\par
+Now, try logging in with the superuser account you created in the previous step. You should see the Django admin index page:\par
+ \par
+You should see a few types of editable content: groups and users. They are provided by django.contrib.auth, the authentication framework shipped by Django.\par
+Make the poll app modifiable in the admin\'b6\par
+But where\rquote s our poll app? It\rquote s not displayed on the admin index page.\par
+Just one thing to do: we need to tell the admin that Question objects have an admin interface. To do this, open the polls/admin.py file, and edit it to look like this:\par
+polls/admin.py\'b6\par
+\par
+from django.contrib import admin\par
+\par
+from .models import Question\par
+\par
+admin.site.register(Question)\par
+Explore the free admin functionality\'b6\par
+Now that we\rquote ve registered Question, Django knows that it should be displayed on the admin index page:\par
+ \par
+Click \ldblquote Questions\rdblquote . Now you\rquote re at the \ldblquote change list\rdblquote  page for questions. This page displays all the questions in the database and lets you choose one to change it. There\rquote s the \ldblquote What\rquote s up?\rdblquote  question we created earlier:\par
+ \par
+Click the \ldblquote What\rquote s up?\rdblquote  question to edit it:\par
+ \par
+Things to note here:\par
+The form is automatically generated from the Question model.\par
+The different model field types (DateTimeField, CharField) correspond to the appropriate HTML input widget. Each type of field knows how to display itself in the Django admin.\par
+Each DateTimeField gets free JavaScript shortcuts. Dates get a \ldblquote Today\rdblquote  shortcut and calendar popup, and times get a \ldblquote Now\rdblquote  shortcut and a convenient popup that lists commonly entered times.\par
+The bottom part of the page gives you a couple of options:\par
+Save \f1\endash\f0  Saves changes and returns to the change-list page for this type of object.\par
+Save and continue editing \f1\endash\f0  Saves changes and reloads the admin page for this object.\par
+Save and add another \f1\endash\f0  Saves changes and loads a new, blank form for this type of object.\par
+Delete \f1\endash\f0  Displays a delete confirmation page.\par
+If the value of \f1\ldblquote\f0 Date published\f1\rdblquote\f0  doesn\f1\rquote\f0 t match the time when you created the question in Tutorial 1, it probably means you forgot to set the correct value for the TIME_ZONE setting. Change it, reload the page and check that the correct value appears.\par
+Change the \f1\ldblquote\f0 Date published\f1\rdblquote\f0  by clicking the \f1\ldblquote\f0 Today\f1\rdblquote\f0  and \f1\ldblquote\f0 Now\f1\rdblquote\f0  shortcuts. Then click \f1\ldblquote\f0 Save and continue editing.\f1\rdblquote\f0  Then click \f1\ldblquote\f0 History\f1\rdblquote\f0  in the upper right. You\f1\rquote\f0 ll see a page listing all changes made to this object via the Django admin, with the timestamp and username of the person who made the change:\par
+ \par
+When you\f1\rquote\f0 re comfortable with the models API and have familiarized yourself with the admin site, read part 3 of this tutorial to learn about how to add more views to our polls app.\par
+\par
+\par
+\par
+\par
+\par
+\cf0 *********************************   page 4   *********************************\par
+\par
+\par
+\par
+\par
+Writing your first Django app, part 3\'b6\par
+This tutorial begins where Tutorial 2 left off. We\rquote re continuing the Web-poll application and will focus on creating the public interface \f1\endash\f0  \f1\ldblquote\f0 views.\f1\rdblquote\f0\par
+Overview\'b6\par
+A view is a \ldblquote type\rdblquote  of Web page in your Django application that generally serves a specific function and has a specific template. For example, in a blog application, you might have the following views:\par
+Blog homepage \f1\endash\f0  displays the latest few entries.\par
+Entry \f1\ldblquote\f0 detail\f1\rdblquote\f0  page \f1\endash\f0  permalink page for a single entry.\par
+Year-based archive page \f1\endash\f0  displays all months with entries in the given year.\par
+Month-based archive page \f1\endash\f0  displays all days with entries in the given month.\par
+Day-based archive page \f1\endash\f0  displays all entries in the given day.\par
+Comment action \f1\endash\f0  handles posting comments to a given entry.\par
+In our poll application, we\f1\rquote\f0 ll have the following four views:\par
+Question \f1\ldblquote\f0 index\f1\rdblquote\f0  page \f1\endash\f0  displays the latest few questions.\par
+Question \f1\ldblquote\f0 detail\f1\rdblquote\f0  page \f1\endash\f0  displays a question text, with no results but with a form to vote.\par
+Question \f1\ldblquote\f0 results\f1\rdblquote\f0  page \f1\endash\f0  displays results for a particular question.\par
+Vote action \f1\endash\f0  handles voting for a particular choice in a particular question.\par
+In Django, web pages and other content are delivered by views. Each view is represented by a simple Python function (or method, in the case of class-based views). Django will choose a view by examining the URL that\f1\rquote\f0 s requested (to be precise, the part of the URL after the domain name).\par
+Now in your time on the web you may have come across such beauties as \f1\ldblquote\f0 ME2/Sites/dirmod.asp?sid=&type=gen&mod=Core+Pages&gid=A6CD4967199A42D9B65B1B\f1\rdblquote\f0 . You will be pleased to know that Django allows us much more elegant URL patterns than that.\par
+A URL pattern is simply the general form of a URL - for example: /newsarchive/<year>/<month>/.\par
+To get from a URL to a view, Django uses what are known as \f1\lquote\f0 URLconfs\f1\rquote\f0 . A URLconf maps URL patterns to views.\par
+This tutorial provides basic instruction in the use of URLconfs, and you can refer to URL dispatcher for more information.\par
+Writing more views\'b6\par
+Now let\rquote s add a few more views to polls/views.py. These views are slightly different, because they take an argument:\par
+polls/views.py\'b6\par
+\par
+def detail(request, question_id):\par
+    return HttpResponse("You're looking at question %s." % question_id)\par
+\par
+def results(request, question_id):\par
+    response = "You're looking at the results of question %s."\par
+    return HttpResponse(response % question_id)\par
+\par
+def vote(request, question_id):\par
+    return HttpResponse("You're voting on question %s." % question_id)\par
+Wire these new views into the polls.urls module by adding the following path() calls:\par
+polls/urls.py\'b6\par
+\par
+from django.urls import path\par
+\par
+from . import views\par
+\par
+urlpatterns = [\par
+    # ex: /polls/\par
+    path('', views.index, name='index'),\par
+    # ex: /polls/5/\par
+    path('<int:question_id>/', views.detail, name='detail'),\par
+    # ex: /polls/5/results/\par
+    path('<int:question_id>/results/', views.results, name='results'),\par
+    # ex: /polls/5/vote/\par
+    path('<int:question_id>/vote/', views.vote, name='vote'),\par
+]\par
+Take a look in your browser, at \ldblquote /polls/34/\rdblquote . It\rquote ll run the detail() method and display whatever ID you provide in the URL. Try \ldblquote /polls/34/results/\rdblquote  and \ldblquote /polls/34/vote/\rdblquote  too \f1\endash\f0  these will display the placeholder results and voting pages.\par
+When somebody requests a page from your website \f1\endash\f0  say, \f1\ldblquote\f0 /polls/34/\f1\rdblquote\f0 , Django will load the mysite.urls Python module because it\f1\rquote\f0 s pointed to by the ROOT_URLCONF setting. It finds the variable named urlpatterns and traverses the patterns in order. After finding the match at 'polls/', it strips off the matching text ("polls/") and sends the remaining text \f1\endash\f0  "34/" \f1\endash\f0  to the \f1\lquote\f0 polls.urls\f1\rquote\f0  URLconf for further processing. There it matches '<int:question_id>/', resulting in a call to the detail() view like so:\par
+detail(request=<HttpRequest object>, question_id=34)\par
+The question_id=34 part comes from <int:question_id>. Using angle brackets \f1\ldblquote\f0 captures\f1\rdblquote\f0  part of the URL and sends it as a keyword argument to the view function. The :question_id> part of the string defines the name that will be used to identify the matched pattern, and the <int: part is a converter that determines what patterns should match this part of the URL path.\par
+There\f1\rquote\f0 s no need to add URL cruft such as .html \f1\endash\f0  unless you want to, in which case you can do something like this:\par
+path('polls/latest.html', views.index),\par
+But, don\f1\rquote\f0 t do that. It\f1\rquote\f0 s silly.\par
+Write views that actually do something\'b6\par
+Each view is responsible for doing one of two things: returning an HttpResponse object containing the content for the requested page, or raising an exception such as Http404. The rest is up to you.\par
+Your view can read records from a database, or not. It can use a template system such as Django\rquote s \f1\endash\f0  or a third-party Python template system \f1\endash\f0  or not. It can generate a PDF file, output XML, create a ZIP file on the fly, anything you want, using whatever Python libraries you want.\par
+All Django wants is that HttpResponse. Or an exception.\par
+Because it\f1\rquote\f0 s convenient, let\f1\rquote\f0 s use Django\f1\rquote\f0 s own database API, which we covered in Tutorial 2. Here\f1\rquote\f0 s one stab at a new index() view, which displays the latest 5 poll questions in the system, separated by commas, according to publication date:\par
+polls/views.py\'b6\par
+\par
+from django.http import HttpResponse\par
+\par
+from .models import Question\par
+\par
+\par
+def index(request):\par
+    latest_question_list = Question.objects.order_by('-pub_date')[:5]\par
+    output = ', '.join([q.question_text for q in latest_question_list])\par
+    return HttpResponse(output)\par
+\par
+# Leave the rest of the views (detail, results, vote) unchanged\par
+There\rquote s a problem here, though: the page\rquote s design is hard-coded in the view. If you want to change the way the page looks, you\rquote ll have to edit this Python code. So let\rquote s use Django\rquote s template system to separate the design from Python by creating a template that the view can use.\par
+First, create a directory called templates in your polls directory. Django will look for templates in there.\par
+Your project\rquote s TEMPLATES setting describes how Django will load and render templates. The default settings file configures a DjangoTemplates backend whose APP_DIRS option is set to True. By convention DjangoTemplates looks for a \ldblquote templates\rdblquote  subdirectory in each of the INSTALLED_APPS.\par
+Within the templates directory you have just created, create another directory called polls, and within that create a file called index.html. In other words, your template should be at polls/templates/polls/index.html. Because of how the app_directories template loader works as described above, you can refer to this template within Django simply as polls/index.html.\par
+Template namespacing\par
+Now we might be able to get away with putting our templates directly in polls/templates (rather than creating another polls subdirectory), but it would actually be a bad idea. Django will choose the first template it finds whose name matches, and if you had a template with the same name in a different application, Django would be unable to distinguish between them. We need to be able to point Django at the right one, and the easiest way to ensure this is by namespacing them. That is, by putting those templates inside another directory named for the application itself.\par
+Put the following code in that template:\par
+polls/templates/polls/index.html\'b6\par
+\par
+\{% if latest_question_list %\}\par
+    <ul>\par
+    \{% for question in latest_question_list %\}\par
+        <li><a href="/polls/\{\{ question.id \}\}/">\{\{ question.question_text \}\}</a></li>\par
+    \{% endfor %\}\par
+    </ul>\par
+\{% else %\}\par
+    <p>No polls are available.</p>\par
+\{% endif %\}\par
+Now let\rquote s update our index view in polls/views.py to use the template:\par
+polls/views.py\'b6\par
+\par
+from django.http import HttpResponse\par
+from django.template import loader\par
+\par
+from .models import Question\par
+\par
+\par
+def index(request):\par
+    latest_question_list = Question.objects.order_by('-pub_date')[:5]\par
+    template = loader.get_template('polls/index.html')\par
+    context = \{\par
+        'latest_question_list': latest_question_list,\par
+    \}\par
+    return HttpResponse(template.render(context, request))\par
+That code loads the template called polls/index.html and passes it a context. The context is a dictionary mapping template variable names to Python objects.\par
+Load the page by pointing your browser at \ldblquote /polls/\rdblquote , and you should see a bulleted-list containing the \ldblquote What\rquote s up\rdblquote  question from Tutorial 2. The link points to the question\rquote s detail page.\par
+A shortcut: render()\'b6\par
+It\rquote s a very common idiom to load a template, fill a context and return an HttpResponse object with the result of the rendered template. Django provides a shortcut. Here\rquote s the full index() view, rewritten:\par
+polls/views.py\'b6\par
+\par
+from django.shortcuts import render\par
+\par
+from .models import Question\par
+\par
+\par
+def index(request):\par
+    latest_question_list = Question.objects.order_by('-pub_date')[:5]\par
+    context = \{'latest_question_list': latest_question_list\}\par
+    return render(request, 'polls/index.html', context)\par
+Note that once we\rquote ve done this in all these views, we no longer need to import loader and HttpResponse (you\rquote ll want to keep HttpResponse if you still have the stub methods for detail, results, and vote).\par
+The render() function takes the request object as its first argument, a template name as its second argument and a dictionary as its optional third argument. It returns an HttpResponse object of the given template rendered with the given context.\par
+Raising a 404 error\'b6\par
+Now, let\rquote s tackle the question detail view \f1\endash\f0  the page that displays the question text for a given poll. Here\f1\rquote\f0 s the view:\par
+polls/views.py\'b6\par
+\par
+from django.http import Http404\par
+from django.shortcuts import render\par
+\par
+from .models import Question\par
+# ...\par
+def detail(request, question_id):\par
+    try:\par
+        question = Question.objects.get(pk=question_id)\par
+    except Question.DoesNotExist:\par
+        raise Http404("Question does not exist")\par
+    return render(request, 'polls/detail.html', \{'question': question\})\par
+The new concept here: The view raises the Http404 exception if a question with the requested ID doesn\rquote t exist.\par
+We\rquote ll discuss what you could put in that polls/detail.html template a bit later, but if you\rquote d like to quickly get the above example working, a file containing just:\par
+polls/templates/polls/detail.html\'b6\par
+\par
+\{\{ question \}\}\par
+will get you started for now.\par
+A shortcut: get_object_or_404()\'b6\par
+It\rquote s a very common idiom to use get() and raise Http404 if the object doesn\rquote t exist. Django provides a shortcut. Here\rquote s the detail() view, rewritten:\par
+polls/views.py\'b6\par
+\par
+from django.shortcuts import get_object_or_404, render\par
+\par
+from .models import Question\par
+# ...\par
+def detail(request, question_id):\par
+    question = get_object_or_404(Question, pk=question_id)\par
+    return render(request, 'polls/detail.html', \{'question': question\})\par
+The get_object_or_404() function takes a Django model as its first argument and an arbitrary number of keyword arguments, which it passes to the get() function of the model\rquote s manager. It raises Http404 if the object doesn\rquote t exist.\par
+Philosophy\par
+Why do we use a helper function get_object_or_404() instead of automatically catching the ObjectDoesNotExist exceptions at a higher level, or having the model API raise Http404 instead of ObjectDoesNotExist?\par
+Because that would couple the model layer to the view layer. One of the foremost design goals of Django is to maintain loose coupling. Some controlled coupling is introduced in the django.shortcuts module.\par
+There\rquote s also a get_list_or_404() function, which works just as get_object_or_404() \f1\endash\f0  except using filter() instead of get(). It raises Http404 if the list is empty.\par
+Use the template system\'b6\par
+Back to the detail() view for our poll application. Given the context variable question, here\rquote s what the polls/detail.html template might look like:\par
+polls/templates/polls/detail.html\'b6\par
+\par
+<h1>\{\{ question.question_text \}\}</h1>\par
+<ul>\par
+\{% for choice in question.choice_set.all %\}\par
+    <li>\{\{ choice.choice_text \}\}</li>\par
+\{% endfor %\}\par
+</ul>\par
+The template system uses dot-lookup syntax to access variable attributes. In the example of \{\{ question.question_text \}\}, first Django does a dictionary lookup on the object question. Failing that, it tries an attribute lookup \f1\endash\f0  which works, in this case. If attribute lookup had failed, it would\f1\rquote\f0 ve tried a list-index lookup.\par
+Method-calling happens in the \{% for %\} loop: question.choice_set.all is interpreted as the Python code question.choice_set.all(), which returns an iterable of Choice objects and is suitable for use in the \{% for %\} tag.\par
+See the template guide for more about templates.\par
+Removing hardcoded URLs in templates\'b6\par
+Remember, when we wrote the link to a question in the polls/index.html template, the link was partially hardcoded like this:\par
+<li><a href="/polls/\{\{ question.id \}\}/">\{\{ question.question_text \}\}</a></li>\par
+The problem with this hardcoded, tightly-coupled approach is that it becomes challenging to change URLs on projects with a lot of templates. However, since you defined the name argument in the path() functions in the polls.urls module, you can remove a reliance on specific URL paths defined in your url configurations by using the \{% url %\} template tag:\par
+<li><a href="\{% url 'detail' question.id %\}">\{\{ question.question_text \}\}</a></li>\par
+The way this works is by looking up the URL definition as specified in the polls.urls module. You can see exactly where the URL name of \lquote detail\rquote  is defined below:\par
+...\par
+# the 'name' value as called by the \{% url %\} template tag\par
+path('<int:question_id>/', views.detail, name='detail'),\par
+...\par
+If you want to change the URL of the polls detail view to something else, perhaps to something like polls/specifics/12/ instead of doing it in the template (or templates) you would change it in polls/urls.py:\par
+...\par
+# added the word 'specifics'\par
+path('specifics/<int:question_id>/', views.detail, name='detail'),\par
+...\par
+Namespacing URL names\'b6\par
+The tutorial project has just one app, polls. In real Django projects, there might be five, ten, twenty apps or more. How does Django differentiate the URL names between them? For example, the polls app has a detail view, and so might an app on the same project that is for a blog. How does one make it so that Django knows which app view to create for a url when using the \{% url %\} template tag?\par
+The answer is to add namespaces to your URLconf. In the polls/urls.py file, go ahead and add an app_name to set the application namespace:\par
+polls/urls.py\'b6\par
+\par
+from django.urls import path\par
+\par
+from . import views\par
+\par
+app_name = 'polls'\par
+urlpatterns = [\par
+    path('', views.index, name='index'),\par
+    path('<int:question_id>/', views.detail, name='detail'),\par
+    path('<int:question_id>/results/', views.results, name='results'),\par
+    path('<int:question_id>/vote/', views.vote, name='vote'),\par
+]\par
+Now change your polls/index.html template from:\par
+polls/templates/polls/index.html\'b6\par
+\par
+<li><a href="\{% url 'detail' question.id %\}">\{\{ question.question_text \}\}</a></li>\par
+to point at the namespaced detail view:\par
+polls/templates/polls/index.html\'b6\par
+\par
+<li><a href="\{% url 'polls:detail' question.id %\}">\{\{ question.question_text \}\}</a></li>\par
+\par
+\par
+\par
+\par
+\par
+\par
+*************************************   page 5   *********************************\par
+\par
+\par
+\par
+\par
+\par
+Writing your first Django app, part 4\'b6\par
+This tutorial begins where Tutorial 3 left off. We\rquote re continuing the Web-poll application and will focus on simple form processing and cutting down our code.\par
+Write a simple form\'b6\par
+Let\rquote s update our poll detail template (\ldblquote polls/detail.html\rdblquote ) from the last tutorial, so that the template contains an HTML <form> element:\par
+polls/templates/polls/detail.html\'b6\par
+\par
+<h1>\{\{ question.question_text \}\}</h1>\par
+\par
+\{% if error_message %\}<p><strong>\{\{ error_message \}\}</strong></p>\{% endif %\}\par
+\par
+<form action="\{% url 'polls:vote' question.id %\}" method="post">\par
+\{% csrf_token %\}\par
+\{% for choice in question.choice_set.all %\}\par
+    <input type="radio" name="choice" id="choice\{\{ forloop.counter \}\}" value="\{\{ choice.id \}\}">\par
+    <label for="choice\{\{ forloop.counter \}\}">\{\{ choice.choice_text \}\}</label><br>\par
+\{% endfor %\}\par
+<input type="submit" value="Vote">\par
+</form>\par
+A quick rundown:\par
+The above template displays a radio button for each question choice. The value of each radio button is the associated question choice\rquote s ID. The name of each radio button is "choice". That means, when somebody selects one of the radio buttons and submits the form, it\rquote ll send the POST data choice=# where # is the ID of the selected choice. This is the basic concept of HTML forms.\par
+We set the form\rquote s action to \{% url 'polls:vote' question.id %\}, and we set method="post". Using method="post" (as opposed to method="get") is very important, because the act of submitting this form will alter data server-side. Whenever you create a form that alters data server-side, use method="post". This tip isn\rquote t specific to Django; it\rquote s just good Web development practice.\par
+forloop.counter indicates how many times the for tag has gone through its loop\par
+Since we\rquote re creating a POST form (which can have the effect of modifying data), we need to worry about Cross Site Request Forgeries. Thankfully, you don\rquote t have to worry too hard, because Django comes with a very easy-to-use system for protecting against it. In short, all POST forms that are targeted at internal URLs should use the \{% csrf_token %\} template tag.\par
+Now, let\rquote s create a Django view that handles the submitted data and does something with it. Remember, in Tutorial 3, we created a URLconf for the polls application that includes this line:\par
+polls/urls.py\'b6\par
+\par
+path('<int:question_id>/vote/', views.vote, name='vote'),\par
+We also created a dummy implementation of the vote() function. Let\rquote s create a real version. Add the following to polls/views.py:\par
+polls/views.py\'b6\par
+\par
+from django.http import HttpResponse, HttpResponseRedirect\par
+from django.shortcuts import get_object_or_404, render\par
+from django.urls import reverse\par
+\par
+from .models import Choice, Question\par
+# ...\par
+def vote(request, question_id):\par
+    question = get_object_or_404(Question, pk=question_id)\par
+    try:\par
+        selected_choice = question.choice_set.get(pk=request.POST['choice'])\par
+    except (KeyError, Choice.DoesNotExist):\par
+        # Redisplay the question voting form.\par
+        return render(request, 'polls/detail.html', \{\par
+            'question': question,\par
+            'error_message': "You didn't select a choice.",\par
+        \})\par
+    else:\par
+        selected_choice.votes += 1\par
+        selected_choice.save()\par
+        # Always return an HttpResponseRedirect after successfully dealing\par
+        # with POST data. This prevents data from being posted twice if a\par
+        # user hits the Back button.\par
+        return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))\par
+This code includes a few things we haven\rquote t covered yet in this tutorial:\par
+request.POST is a dictionary-like object that lets you access submitted data by key name. In this case, request.POST['choice'] returns the ID of the selected choice, as a string. request.POST values are always strings.\par
+Note that Django also provides request.GET for accessing GET data in the same way \f1\endash\f0  but we\f1\rquote\f0 re explicitly using request.POST in our code, to ensure that data is only altered via a POST call.\par
+request.POST['choice'] will raise KeyError if choice wasn\f1\rquote\f0 t provided in POST data. The above code checks for KeyError and redisplays the question form with an error message if choice isn\f1\rquote\f0 t given.\par
+After incrementing the choice count, the code returns an HttpResponseRedirect rather than a normal HttpResponse. HttpResponseRedirect takes a single argument: the URL to which the user will be redirected (see the following point for how we construct the URL in this case).\par
+As the Python comment above points out, you should always return an HttpResponseRedirect after successfully dealing with POST data. This tip isn\f1\rquote\f0 t specific to Django; it\f1\rquote\f0 s just good Web development practice.\par
+We are using the reverse() function in the HttpResponseRedirect constructor in this example. This function helps avoid having to hardcode a URL in the view function. It is given the name of the view that we want to pass control to and the variable portion of the URL pattern that points to that view. In this case, using the URLconf we set up in Tutorial 3, this reverse() call will return a string like\par
+'/polls/3/results/'\par
+where the 3 is the value of question.id. This redirected URL will then call the 'results' view to display the final page.\par
+As mentioned in Tutorial 3, request is an HttpRequest object. For more on HttpRequest objects, see the request and response documentation.\par
+After somebody votes in a question, the vote() view redirects to the results page for the question. Let\f1\rquote\f0 s write that view:\par
+polls/views.py\'b6\par
+\par
+from django.shortcuts import get_object_or_404, render\par
+\par
+\par
+def results(request, question_id):\par
+    question = get_object_or_404(Question, pk=question_id)\par
+    return render(request, 'polls/results.html', \{'question': question\})\par
+This is almost exactly the same as the detail() view from Tutorial 3. The only difference is the template name. We\rquote ll fix this redundancy later.\par
+Now, create a polls/results.html template:\par
+polls/templates/polls/results.html\'b6\par
+\par
+<h1>\{\{ question.question_text \}\}</h1>\par
+\par
+<ul>\par
+\{% for choice in question.choice_set.all %\}\par
+    <li>\{\{ choice.choice_text \}\} -- \{\{ choice.votes \}\} vote\{\{ choice.votes|pluralize \}\}</li>\par
+\{% endfor %\}\par
+</ul>\par
+\par
+<a href="\{% url 'polls:detail' question.id %\}">Vote again?</a>\par
+Now, go to /polls/1/ in your browser and vote in the question. You should see a results page that gets updated each time you vote. If you submit the form without having chosen a choice, you should see the error message.\par
+Note\par
+The code for our vote() view does have a small problem. It first gets the selected_choice object from the database, then computes the new value of votes, and then saves it back to the database. If two users of your website try to vote at exactly the same time, this might go wrong: The same value, let\rquote s say 42, will be retrieved for votes. Then, for both users the new value of 43 is computed and saved, but 44 would be the expected value.\par
+This is called a race condition. If you are interested, you can read Avoiding race conditions using F() to learn how you can solve this issue.\par
+Use generic views: Less code is better\'b6\par
+The detail() (from Tutorial 3) and results() views are very simple \f1\endash\f0  and, as mentioned above, redundant. The index() view, which displays a list of polls, is similar.\par
+These views represent a common case of basic Web development: getting data from the database according to a parameter passed in the URL, loading a template and returning the rendered template. Because this is so common, Django provides a shortcut, called the \f1\ldblquote\f0 generic views\f1\rdblquote\f0  system.\par
+Generic views abstract common patterns to the point where you don\f1\rquote\f0 t even need to write Python code to write an app.\par
+Let\f1\rquote\f0 s convert our poll app to use the generic views system, so we can delete a bunch of our own code. We\f1\rquote\f0 ll just have to take a few steps to make the conversion. We will:\par
+Convert the URLconf.\par
+Delete some of the old, unneeded views.\par
+Introduce new views based on Django\f1\rquote\f0 s generic views.\par
+Read on for details.\par
+Why the code-shuffle?\par
+Generally, when writing a Django app, you\f1\rquote\f0 ll evaluate whether generic views are a good fit for your problem, and you\f1\rquote\f0 ll use them from the beginning, rather than refactoring your code halfway through. But this tutorial intentionally has focused on writing the views \f1\ldblquote\f0 the hard way\f1\rdblquote\f0  until now, to focus on core concepts.\par
+You should know basic math before you start using a calculator.\par
+Amend URLconf\'b6\par
+First, open the polls/urls.py URLconf and change it like so:\par
+polls/urls.py\'b6\par
+\par
+from django.urls import path\par
+\par
+from . import views\par
+\par
+app_name = 'polls'\par
+urlpatterns = [\par
+    path('', views.IndexView.as_view(), name='index'),\par
+    path('<int:pk>/', views.DetailView.as_view(), name='detail'),\par
+    path('<int:pk>/results/', views.ResultsView.as_view(), name='results'),\par
+    path('<int:question_id>/vote/', views.vote, name='vote'),\par
+]\par
+Note that the name of the matched pattern in the path strings of the second and third patterns has changed from <question_id> to <pk>.\par
+Amend views\'b6\par
+Next, we\rquote re going to remove our old index, detail, and results views and use Django\rquote s generic views instead. To do so, open the polls/views.py file and change it like so:\par
+polls/views.py\'b6\par
+\par
+from django.http import HttpResponseRedirect\par
+from django.shortcuts import get_object_or_404, render\par
+from django.urls import reverse\par
+from django.views import generic\par
+\par
+from .models import Choice, Question\par
+\par
+\par
+class IndexView(generic.ListView):\par
+    template_name = 'polls/index.html'\par
+    context_object_name = 'latest_question_list'\par
+\par
+    def get_queryset(self):\par
+        """Return the last five published questions."""\par
+        return Question.objects.order_by('-pub_date')[:5]\par
+\par
+\par
+class DetailView(generic.DetailView):\par
+    model = Question\par
+    template_name = 'polls/detail.html'\par
+\par
+\par
+class ResultsView(generic.DetailView):\par
+    model = Question\par
+    template_name = 'polls/results.html'\par
+\par
+\par
+def vote(request, question_id):\par
+    ... # same as above, no changes needed.\par
+We\rquote re using two generic views here: ListView and DetailView. Respectively, those two views abstract the concepts of \ldblquote display a list of objects\rdblquote  and \ldblquote display a detail page for a particular type of object.\rdblquote\par
+Each generic view needs to know what model it will be acting upon. This is provided using the model attribute.\par
+The DetailView generic view expects the primary key value captured from the URL to be called "pk", so we\rquote ve changed question_id to pk for the generic views.\par
+By default, the DetailView generic view uses a template called <app name>/<model name>_detail.html. In our case, it would use the template "polls/question_detail.html". The template_name attribute is used to tell Django to use a specific template name instead of the autogenerated default template name. We also specify the template_name for the results list view \f1\endash\f0  this ensures that the results view and the detail view have a different appearance when rendered, even though they\f1\rquote\f0 re both a DetailView behind the scenes.\par
+Similarly, the ListView generic view uses a default template called <app name>/<model name>_list.html; we use template_name to tell ListView to use our existing "polls/index.html" template.\par
+In previous parts of the tutorial, the templates have been provided with a context that contains the question and latest_question_list context variables. For DetailView the question variable is provided automatically \f1\endash\f0  since we\f1\rquote\f0 re using a Django model (Question), Django is able to determine an appropriate name for the context variable. However, for ListView, the automatically generated context variable is question_list. To override this we provide the context_object_name attribute, specifying that we want to use latest_question_list instead. As an alternative approach, you could change your templates to match the new default context variables \f1\endash\f0  but it\f1\rquote\f0 s a lot easier to just tell Django to use the variable you want.\par
+Run the server, and use your new polling app based on generic views.\par
+For full details on generic views, see the generic views documentation.\par
+\par
+\par
+\par
+\par
+************************************   page  6 ****************************\par
+\par
+\par
+\par
+\par
+Writing your first Django app, part 5\'b6\par
+This tutorial begins where Tutorial 4 left off. We\rquote ve built a Web-poll application, and we\rquote ll now create some automated tests for it.\par
+Introducing automated testing\'b6\par
+What are automated tests?\'b6\par
+Tests are simple routines that check the operation of your code.\par
+Testing operates at different levels. Some tests might apply to a tiny detail (does a particular model method return values as expected?) while others examine the overall operation of the software (does a sequence of user inputs on the site produce the desired result?). That\rquote s no different from the kind of testing you did earlier in Tutorial 2, using the shell to examine the behavior of a method, or running the application and entering data to check how it behaves.\par
+What\rquote s different in automated tests is that the testing work is done for you by the system. You create a set of tests once, and then as you make changes to your app, you can check that your code still works as you originally intended, without having to perform time consuming manual testing.\par
+Why you need to create tests\'b6\par
+So why create tests, and why now?\par
+You may feel that you have quite enough on your plate just learning Python/Django, and having yet another thing to learn and do may seem overwhelming and perhaps unnecessary. After all, our polls application is working quite happily now; going through the trouble of creating automated tests is not going to make it work any better. If creating the polls application is the last bit of Django programming you will ever do, then true, you don\rquote t need to know how to create automated tests. But, if that\rquote s not the case, now is an excellent time to learn.\par
+Tests will save you time\'b6\par
+Up to a certain point, \lquote checking that it seems to work\rquote  will be a satisfactory test. In a more sophisticated application, you might have dozens of complex interactions between components.\par
+A change in any of those components could have unexpected consequences on the application\rquote s behavior. Checking that it still \lquote seems to work\rquote  could mean running through your code\rquote s functionality with twenty different variations of your test data just to make sure you haven\rquote t broken something - not a good use of your time.\par
+That\rquote s especially true when automated tests could do this for you in seconds. If something\rquote s gone wrong, tests will also assist in identifying the code that\rquote s causing the unexpected behavior.\par
+Sometimes it may seem a chore to tear yourself away from your productive, creative programming work to face the unglamorous and unexciting business of writing tests, particularly when you know your code is working properly.\par
+However, the task of writing tests is a lot more fulfilling than spending hours testing your application manually or trying to identify the cause of a newly-introduced problem.\par
+Tests don\rquote t just identify problems, they prevent them\'b6\par
+It\rquote s a mistake to think of tests merely as a negative aspect of development.\par
+Without tests, the purpose or intended behavior of an application might be rather opaque. Even when it\rquote s your own code, you will sometimes find yourself poking around in it trying to find out what exactly it\rquote s doing.\par
+Tests change that; they light up your code from the inside, and when something goes wrong, they focus light on the part that has gone wrong - even if you hadn\rquote t even realized it had gone wrong.\par
+Tests make your code more attractive\'b6\par
+You might have created a brilliant piece of software, but you will find that many other developers will simply refuse to look at it because it lacks tests; without tests, they won\rquote t trust it. Jacob Kaplan-Moss, one of Django\rquote s original developers, says \ldblquote Code without tests is broken by design.\rdblquote\par
+That other developers want to see tests in your software before they take it seriously is yet another reason for you to start writing tests.\par
+Tests help teams work together\'b6\par
+The previous points are written from the point of view of a single developer maintaining an application. Complex applications will be maintained by teams. Tests guarantee that colleagues don\rquote t inadvertently break your code (and that you don\rquote t break theirs without knowing). If you want to make a living as a Django programmer, you must be good at writing tests!\par
+Basic testing strategies\'b6\par
+There are many ways to approach writing tests.\par
+Some programmers follow a discipline called \ldblquote test-driven development\rdblquote ; they actually write their tests before they write their code. This might seem counter-intuitive, but in fact it\rquote s similar to what most people will often do anyway: they describe a problem, then create some code to solve it. Test-driven development simply formalizes the problem in a Python test case.\par
+More often, a newcomer to testing will create some code and later decide that it should have some tests. Perhaps it would have been better to write some tests earlier, but it\rquote s never too late to get started.\par
+Sometimes it\rquote s difficult to figure out where to get started with writing tests. If you have written several thousand lines of Python, choosing something to test might not be easy. In such a case, it\rquote s fruitful to write your first test the next time you make a change, either when you add a new feature or fix a bug.\par
+So let\rquote s do that right away.\par
+Writing our first test\'b6\par
+We identify a bug\'b6\par
+Fortunately, there\rquote s a little bug in the polls application for us to fix right away: the Question.was_published_recently() method returns True if the Question was published within the last day (which is correct) but also if the Question\rquote s pub_date field is in the future (which certainly isn\rquote t).\par
+Confirm the bug by using the shell to check the method on a question whose date lies in the future:\par
+?/? ? \par
+$ python manage.py shell\par
+>>> import datetime\par
+>>> from django.utils import timezone\par
+>>> from polls.models import Question\par
+>>> # create a Question instance with pub_date 30 days in the future\par
+>>> future_question = Question(pub_date=timezone.now() + datetime.timedelta(days=30))\par
+>>> # was it published recently?\par
+>>> future_question.was_published_recently()\par
+True\par
+Since things in the future are not \lquote recent\rquote , this is clearly wrong.\par
+Create a test to expose the bug\'b6\par
+What we\rquote ve just done in the shell to test for the problem is exactly what we can do in an automated test, so let\rquote s turn that into an automated test.\par
+A conventional place for an application\rquote s tests is in the application\rquote s tests.py file; the testing system will automatically find tests in any file whose name begins with test.\par
+Put the following in the tests.py file in the polls application:\par
+polls/tests.py\'b6\par
+\par
+import datetime\par
+\par
+from django.test import TestCase\par
+from django.utils import timezone\par
+\par
+from .models import Question\par
+\par
+\par
+class QuestionModelTests(TestCase):\par
+\par
+    def test_was_published_recently_with_future_question(self):\par
+        """\par
+        was_published_recently() returns False for questions whose pub_date\par
+        is in the future.\par
+        """\par
+        time = timezone.now() + datetime.timedelta(days=30)\par
+        future_question = Question(pub_date=time)\par
+        self.assertIs(future_question.was_published_recently(), False)\par
+Here we have created a django.test.TestCase subclass with a method that creates a Question instance with a pub_date in the future. We then check the output of was_published_recently() - which ought to be False.\par
+Running tests\'b6\par
+In the terminal, we can run our test:\par
+?/? ? \par
+$ python manage.py test polls\par
+and you\rquote ll see something like:\par
+Creating test database for alias 'default'...\par
+System check identified no issues (0 silenced).\par
+F\par
+======================================================================\par
+FAIL: test_was_published_recently_with_future_question (polls.tests.QuestionModelTests)\par
+----------------------------------------------------------------------\par
+Traceback (most recent call last):\par
+  File "/path/to/mysite/polls/tests.py", line 16, in test_was_published_recently_with_future_question\par
+    self.assertIs(future_question.was_published_recently(), False)\par
+AssertionError: True is not False\par
+\par
+----------------------------------------------------------------------\par
+Ran 1 test in 0.001s\par
+\par
+FAILED (failures=1)\par
+Destroying test database for alias 'default'...\par
+What happened is this:\par
+manage.py test polls looked for tests in the polls application\par
+it found a subclass of the django.test.TestCase class\par
+it created a special database for the purpose of testing\par
+it looked for test methods - ones whose names begin with test\par
+in test_was_published_recently_with_future_question it created a Question instance whose pub_date field is 30 days in the future\par
+\'85 and using the assertIs() method, it discovered that its was_published_recently() returns True, though we wanted it to return False\par
+The test informs us which test failed and even the line on which the failure occurred.\par
+Fixing the bug\'b6\par
+We already know what the problem is: Question.was_published_recently() should return False if its pub_date is in the future. Amend the method in models.py, so that it will only return True if the date is also in the past:\par
+polls/models.py\'b6\par
+\par
+def was_published_recently(self):\par
+    now = timezone.now()\par
+    return now - datetime.timedelta(days=1) <= self.pub_date <= now\par
+and run the test again:\par
+Creating test database for alias 'default'...\par
+System check identified no issues (0 silenced).\par
+.\par
+----------------------------------------------------------------------\par
+Ran 1 test in 0.001s\par
+\par
+OK\par
+Destroying test database for alias 'default'...\par
+After identifying a bug, we wrote a test that exposes it and corrected the bug in the code so our test passes.\par
+Many other things might go wrong with our application in the future, but we can be sure that we won\rquote t inadvertently reintroduce this bug, because simply running the test will warn us immediately. We can consider this little portion of the application pinned down safely forever.\par
+More comprehensive tests\'b6\par
+While we\rquote re here, we can further pin down the was_published_recently() method; in fact, it would be positively embarrassing if in fixing one bug we had introduced another.\par
+Add two more test methods to the same class, to test the behavior of the method more comprehensively:\par
+polls/tests.py\'b6\par
+\par
+def test_was_published_recently_with_old_question(self):\par
+    """\par
+    was_published_recently() returns False for questions whose pub_date\par
+    is older than 1 day.\par
+    """\par
+    time = timezone.now() - datetime.timedelta(days=1, seconds=1)\par
+    old_question = Question(pub_date=time)\par
+    self.assertIs(old_question.was_published_recently(), False)\par
+\par
+def test_was_published_recently_with_recent_question(self):\par
+    """\par
+    was_published_recently() returns True for questions whose pub_date\par
+    is within the last day.\par
+    """\par
+    time = timezone.now() - datetime.timedelta(hours=23, minutes=59, seconds=59)\par
+    recent_question = Question(pub_date=time)\par
+    self.assertIs(recent_question.was_published_recently(), True)\par
+And now we have three tests that confirm that Question.was_published_recently() returns sensible values for past, recent, and future questions.\par
+Again, polls is a simple application, but however complex it grows in the future and whatever other code it interacts with, we now have some guarantee that the method we have written tests for will behave in expected ways.\par
+Test a view\'b6\par
+The polls application is fairly undiscriminating: it will publish any question, including ones whose pub_date field lies in the future. We should improve this. Setting a pub_date in the future should mean that the Question is published at that moment, but invisible until then.\par
+A test for a view\'b6\par
+When we fixed the bug above, we wrote the test first and then the code to fix it. In fact that was a simple example of test-driven development, but it doesn\rquote t really matter in which order we do the work.\par
+In our first test, we focused closely on the internal behavior of the code. For this test, we want to check its behavior as it would be experienced by a user through a web browser.\par
+Before we try to fix anything, let\rquote s have a look at the tools at our disposal.\par
+The Django test client\'b6\par
+Django provides a test Client to simulate a user interacting with the code at the view level. We can use it in tests.py or even in the shell.\par
+We will start again with the shell, where we need to do a couple of things that won\rquote t be necessary in tests.py. The first is to set up the test environment in the shell:\par
+?/? ? \par
+$ python manage.py shell\par
+>>> from django.test.utils import setup_test_environment\par
+>>> setup_test_environment()\par
+setup_test_environment() installs a template renderer which will allow us to examine some additional attributes on responses such as response.context that otherwise wouldn\rquote t be available. Note that this method does not setup a test database, so the following will be run against the existing database and the output may differ slightly depending on what questions you already created. You might get unexpected results if your TIME_ZONE in settings.py isn\rquote t correct. If you don\rquote t remember setting it earlier, check it before continuing.\par
+Next we need to import the test client class (later in tests.py we will use the django.test.TestCase class, which comes with its own client, so this won\rquote t be required):\par
+>>> from django.test import Client\par
+>>> # create an instance of the client for our use\par
+>>> client = Client()\par
+With that ready, we can ask the client to do some work for us:\par
+>>> # get a response from '/'\par
+>>> response = client.get('/')\par
+Not Found: /\par
+>>> # we should expect a 404 from that address; if you instead see an\par
+>>> # "Invalid HTTP_HOST header" error and a 400 response, you probably\par
+>>> # omitted the setup_test_environment() call described earlier.\par
+>>> response.status_code\par
+404\par
+>>> # on the other hand we should expect to find something at '/polls/'\par
+>>> # we'll use 'reverse()' rather than a hardcoded URL\par
+>>> from django.urls import reverse\par
+>>> response = client.get(reverse('polls:index'))\par
+>>> response.status_code\par
+200\par
+>>> response.content\par
+b'\\n    <ul>\\n    \\n        <li><a href="/polls/1/">What&#39;s up?</a></li>\\n    \\n    </ul>\\n\\n'\par
+>>> response.context['latest_question_list']\par
+<QuerySet [<Question: What's up?>]>\par
+Improving our view\'b6\par
+The list of polls shows polls that aren\rquote t published yet (i.e. those that have a pub_date in the future). Let\rquote s fix that.\par
+In Tutorial 4 we introduced a class-based view, based on ListView:\par
+polls/views.py\'b6\par
+\par
+class IndexView(generic.ListView):\par
+    template_name = 'polls/index.html'\par
+    context_object_name = 'latest_question_list'\par
+\par
+    def get_queryset(self):\par
+        """Return the last five published questions."""\par
+        return Question.objects.order_by('-pub_date')[:5]\par
+We need to amend the get_queryset() method and change it so that it also checks the date by comparing it with timezone.now(). First we need to add an import:\par
+polls/views.py\'b6\par
+\par
+from django.utils import timezone\par
+and then we must amend the get_queryset method like so:\par
+polls/views.py\'b6\par
+\par
+def get_queryset(self):\par
+    """\par
+    Return the last five published questions (not including those set to be\par
+    published in the future).\par
+    """\par
+    return Question.objects.filter(\par
+        pub_date__lte=timezone.now()\par
+    ).order_by('-pub_date')[:5]\par
+Question.objects.filter(pub_date__lte=timezone.now()) returns a queryset containing Questions whose pub_date is less than or equal to - that is, earlier than or equal to - timezone.now.\par
+Testing our new view\'b6\par
+Now you can satisfy yourself that this behaves as expected by firing up runserver, loading the site in your browser, creating Questions with dates in the past and future, and checking that only those that have been published are listed. You don\rquote t want to have to do that every single time you make any change that might affect this - so let\rquote s also create a test, based on our shell session above.\par
+Add the following to polls/tests.py:\par
+polls/tests.py\'b6\par
+\par
+from django.urls import reverse\par
+and we\rquote ll create a shortcut function to create questions as well as a new test class:\par
+polls/tests.py\'b6\par
+\par
+def create_question(question_text, days):\par
+    """\par
+    Create a question with the given `question_text` and published the\par
+    given number of `days` offset to now (negative for questions published\par
+    in the past, positive for questions that have yet to be published).\par
+    """\par
+    time = timezone.now() + datetime.timedelta(days=days)\par
+    return Question.objects.create(question_text=question_text, pub_date=time)\par
+\par
+\par
+class QuestionIndexViewTests(TestCase):\par
+    def test_no_questions(self):\par
+        """\par
+        If no questions exist, an appropriate message is displayed.\par
+        """\par
+        response = self.client.get(reverse('polls:index'))\par
+        self.assertEqual(response.status_code, 200)\par
+        self.assertContains(response, "No polls are available.")\par
+        self.assertQuerysetEqual(response.context['latest_question_list'], [])\par
+\par
+    def test_past_question(self):\par
+        """\par
+        Questions with a pub_date in the past are displayed on the\par
+        index page.\par
+        """\par
+        create_question(question_text="Past question.", days=-30)\par
+        response = self.client.get(reverse('polls:index'))\par
+        self.assertQuerysetEqual(\par
+            response.context['latest_question_list'],\par
+            ['<Question: Past question.>']\par
+        )\par
+\par
+    def test_future_question(self):\par
+        """\par
+        Questions with a pub_date in the future aren't displayed on\par
+        the index page.\par
+        """\par
+        create_question(question_text="Future question.", days=30)\par
+        response = self.client.get(reverse('polls:index'))\par
+        self.assertContains(response, "No polls are available.")\par
+        self.assertQuerysetEqual(response.context['latest_question_list'], [])\par
+\par
+    def test_future_question_and_past_question(self):\par
+        """\par
+        Even if both past and future questions exist, only past questions\par
+        are displayed.\par
+        """\par
+        create_question(question_text="Past question.", days=-30)\par
+        create_question(question_text="Future question.", days=30)\par
+        response = self.client.get(reverse('polls:index'))\par
+        self.assertQuerysetEqual(\par
+            response.context['latest_question_list'],\par
+            ['<Question: Past question.>']\par
+        )\par
+\par
+    def test_two_past_questions(self):\par
+        """\par
+        The questions index page may display multiple questions.\par
+        """\par
+        create_question(question_text="Past question 1.", days=-30)\par
+        create_question(question_text="Past question 2.", days=-5)\par
+        response = self.client.get(reverse('polls:index'))\par
+        self.assertQuerysetEqual(\par
+            response.context['latest_question_list'],\par
+            ['<Question: Past question 2.>', '<Question: Past question 1.>']\par
+        )\par
+Let\rquote s look at some of these more closely.\par
+First is a question shortcut function, create_question, to take some repetition out of the process of creating questions.\par
+test_no_questions doesn\rquote t create any questions, but checks the message: \ldblquote No polls are available.\rdblquote  and verifies the latest_question_list is empty. Note that the django.test.TestCase class provides some additional assertion methods. In these examples, we use assertContains() and assertQuerysetEqual().\par
+In test_past_question, we create a question and verify that it appears in the list.\par
+In test_future_question, we create a question with a pub_date in the future. The database is reset for each test method, so the first question is no longer there, and so again the index shouldn\rquote t have any questions in it.\par
+And so on. In effect, we are using the tests to tell a story of admin input and user experience on the site, and checking that at every state and for every new change in the state of the system, the expected results are published.\par
+Testing the DetailView\'b6\par
+What we have works well; however, even though future questions don\rquote t appear in the index, users can still reach them if they know or guess the right URL. So we need to add a similar constraint to DetailView:\par
+polls/views.py\'b6\par
+\par
+class DetailView(generic.DetailView):\par
+    ...\par
+    def get_queryset(self):\par
+        """\par
+        Excludes any questions that aren't published yet.\par
+        """\par
+        return Question.objects.filter(pub_date__lte=timezone.now())\par
+And of course, we will add some tests, to check that a Question whose pub_date is in the past can be displayed, and that one with a pub_date in the future is not:\par
+polls/tests.py\'b6\par
+\par
+class QuestionDetailViewTests(TestCase):\par
+    def test_future_question(self):\par
+        """\par
+        The detail view of a question with a pub_date in the future\par
+        returns a 404 not found.\par
+        """\par
+        future_question = create_question(question_text='Future question.', days=5)\par
+        url = reverse('polls:detail', args=(future_question.id,))\par
+        response = self.client.get(url)\par
+        self.assertEqual(response.status_code, 404)\par
+\par
+    def test_past_question(self):\par
+        """\par
+        The detail view of a question with a pub_date in the past\par
+        displays the question's text.\par
+        """\par
+        past_question = create_question(question_text='Past Question.', days=-5)\par
+        url = reverse('polls:detail', args=(past_question.id,))\par
+        response = self.client.get(url)\par
+        self.assertContains(response, past_question.question_text)\par
+Ideas for more tests\'b6\par
+We ought to add a similar get_queryset method to ResultsView and create a new test class for that view. It\rquote ll be very similar to what we have just created; in fact there will be a lot of repetition.\par
+We could also improve our application in other ways, adding tests along the way. For example, it\rquote s silly that Questions can be published on the site that have no Choices. So, our views could check for this, and exclude such Questions. Our tests would create a Question without Choices and then test that it\rquote s not published, as well as create a similar Question with Choices, and test that it is published.\par
+Perhaps logged-in admin users should be allowed to see unpublished Questions, but not ordinary visitors. Again: whatever needs to be added to the software to accomplish this should be accompanied by a test, whether you write the test first and then make the code pass the test, or work out the logic in your code first and then write a test to prove it.\par
+At a certain point you are bound to look at your tests and wonder whether your code is suffering from test bloat, which brings us to:\par
+When testing, more is better\'b6\par
+It might seem that our tests are growing out of control. At this rate there will soon be more code in our tests than in our application, and the repetition is unaesthetic, compared to the elegant conciseness of the rest of our code.\par
+It doesn\rquote t matter. Let them grow. For the most part, you can write a test once and then forget about it. It will continue performing its useful function as you continue to develop your program.\par
+Sometimes tests will need to be updated. Suppose that we amend our views so that only Questions with Choices are published. In that case, many of our existing tests will fail - telling us exactly which tests need to be amended to bring them up to date, so to that extent tests help look after themselves.\par
+At worst, as you continue developing, you might find that you have some tests that are now redundant. Even that\rquote s not a problem; in testing redundancy is a good thing.\par
+As long as your tests are sensibly arranged, they won\rquote t become unmanageable. Good rules-of-thumb include having:\par
+a separate TestClass for each model or view\par
+a separate test method for each set of conditions you want to test\par
+test method names that describe their function\par
+Further testing\'b6\par
+This tutorial only introduces some of the basics of testing. There\rquote s a great deal more you can do, and a number of very useful tools at your disposal to achieve some very clever things.\par
+For example, while our tests here have covered some of the internal logic of a model and the way our views publish information, you can use an \ldblquote in-browser\rdblquote  framework such as Selenium to test the way your HTML actually renders in a browser. These tools allow you to check not just the behavior of your Django code, but also, for example, of your JavaScript. It\rquote s quite something to see the tests launch a browser, and start interacting with your site, as if a human being were driving it! Django includes LiveServerTestCase to facilitate integration with tools like Selenium.\par
+If you have a complex application, you may want to run tests automatically with every commit for the purposes of continuous integration, so that quality control is itself - at least partially - automated.\par
+A good way to spot untested parts of your application is to check code coverage. This also helps identify fragile or even dead code. If you can\rquote t test a piece of code, it usually means that code should be refactored or removed. Coverage will help to identify dead code. See Integration with coverage.py for details.\par
+Testing in Django has comprehensive information about testing.\par
+What\rquote s next?\'b6\par
+For full details on testing, see Testing in Django.\par
+When you\rquote re comfortable with testing Django views, read part 6 of this tutorial to learn about static files management.\par
+\par
+\par
+\par
+\par
+\par
+\cf1\par
+*******************************      page 7  **********************************\par
+\par
+\par
+\par
+\par
+Writing your first Django app, part 6\'b6\par
+This tutorial begins where Tutorial 5 left off. We\rquote ve built a tested Web-poll application, and we\rquote ll now add a stylesheet and an image.\par
+Aside from the HTML generated by the server, web applications generally need to serve additional files \f1\emdash\f0  such as images, JavaScript, or CSS \f1\emdash\f0  necessary to render the complete web page. In Django, we refer to these files as \f1\ldblquote\f0 static files\f1\rdblquote\f0 .\par
+For small projects, this isn\f1\rquote\f0 t a big deal, because you can just keep the static files somewhere your web server can find it. However, in bigger projects \f1\endash\f0  especially those comprised of multiple apps \f1\endash\f0  dealing with the multiple sets of static files provided by each application starts to get tricky.\par
+That\f1\rquote\f0 s what django.contrib.staticfiles is for: it collects static files from each of your applications (and any other places you specify) into a single location that can easily be served in production.\par
+Customize your app\f1\rquote\f0 s look and feel\'b6\par
+First, create a directory called static in your polls directory. Django will look for static files there, similarly to how Django finds templates inside polls/templates/.\par
+Django\rquote s STATICFILES_FINDERS setting contains a list of finders that know how to discover static files from various sources. One of the defaults is AppDirectoriesFinder which looks for a \ldblquote static\rdblquote  subdirectory in each of the INSTALLED_APPS, like the one in polls we just created. The admin site uses the same directory structure for its static files.\par
+Within the static directory you have just created, create another directory called polls and within that create a file called style.css. In other words, your stylesheet should be at polls/static/polls/style.css. Because of how the AppDirectoriesFinder staticfile finder works, you can refer to this static file in Django simply as polls/style.css, similar to how you reference the path for templates.\par
+Static file namespacing\par
+Just like templates, we might be able to get away with putting our static files directly in polls/static (rather than creating another polls subdirectory), but it would actually be a bad idea. Django will choose the first static file it finds whose name matches, and if you had a static file with the same name in a different application, Django would be unable to distinguish between them. We need to be able to point Django at the right one, and the easiest way to ensure this is by namespacing them. That is, by putting those static files inside another directory named for the application itself.\par
+Put the following code in that stylesheet (polls/static/polls/style.css):\par
+polls/static/polls/style.css\'b6\par
+\par
+li a \{\par
+    color: green;\par
+\}\par
+Next, add the following at the top of polls/templates/polls/index.html:\par
+polls/templates/polls/index.html\'b6\par
+\par
+\{% load static %\}\par
+\par
+<link rel="stylesheet" type="text/css" href="\{% static 'polls/style.css' %\}">\par
+The \{% static %\} template tag generates the absolute URL of static files.\par
+That\rquote s all you need to do for development.\par
+Start the server (or restart it if it\rquote s already running):\par
+?/? ? \par
+$ python manage.py runserver\par
+Reload {\cf0{\field{\*\fldinst{HYPERLINK http://localhost:8000/polls/ }}{\fldrslt{http://localhost:8000/polls/\ul0\cf0}}}}\f0\fs24  and you should see that the question links are green (Django style!) which means that your stylesheet was properly loaded.\par
+Adding a background-image\'b6\par
+Next, we\rquote ll create a subdirectory for images. Create an images subdirectory in the polls/static/polls/ directory. Inside this directory, put an image called background.gif. In other words, put your image in polls/static/polls/images/background.gif.\par
+Then, add to your stylesheet (polls/static/polls/style.css):\par
+polls/static/polls/style.css\'b6\par
+\par
+body \{\par
+    background: white url("images/background.gif") no-repeat;\par
+\}\par
+Reload {\cf0{\field{\*\fldinst{HYPERLINK http://localhost:8000/polls/ }}{\fldrslt{http://localhost:8000/polls/\ul0\cf0}}}}\f0\fs24  and you should see the background loaded in the top left of the screen.\par
+Warning\par
+Of course the \{% static %\} template tag is not available for use in static files like your stylesheet which aren\rquote t generated by Django. You should always use relative paths to link your static files between each other, because then you can change STATIC_URL (used by the static template tag to generate its URLs) without having to modify a bunch of paths in your static files as well.\par
+These are the basics. For more details on settings and other bits included with the framework see the static files howto and the staticfiles reference. Deploying static files discusses how to use static files on a real server.\par
+When you\rquote re comfortable with the static files, read part 7 of this tutorial to learn how to customize Django\rquote s automatically-generated admin site.\par
+\par
+\par
+\par
+\par
+***********************************    page 8   *******************************\par
+\par
+\par
+\par
+\par
+\par
+Writing your first Django app, part 7\'b6\par
+This tutorial begins where Tutorial 6 left off. We\rquote re continuing the Web-poll application and will focus on customizing Django\rquote s automatically-generated admin site that we first explored in Tutorial 2.\par
+Customize the admin form\'b6\par
+By registering the Question model with admin.site.register(Question), Django was able to construct a default form representation. Often, you\rquote ll want to customize how the admin form looks and works. You\rquote ll do this by telling Django the options you want when you register the object.\par
+Let\rquote s see how this works by reordering the fields on the edit form. Replace the admin.site.register(Question) line with:\par
+polls/admin.py\'b6\par
+\par
+from django.contrib import admin\par
+\par
+from .models import Question\par
+\par
+\par
+class QuestionAdmin(admin.ModelAdmin):\par
+    fields = ['pub_date', 'question_text']\par
+\par
+admin.site.register(Question, QuestionAdmin)\par
+You\rquote ll follow this pattern \f1\endash\f0  create a model admin class, then pass it as the second argument to admin.site.register() \f1\endash\f0  any time you need to change the admin options for a model.\par
+This particular change above makes the \f1\ldblquote\f0 Publication date\f1\rdblquote\f0  come before the \f1\ldblquote\f0 Question\f1\rdblquote\f0  field:\par
+ \par
+This isn\f1\rquote\f0 t impressive with only two fields, but for admin forms with dozens of fields, choosing an intuitive order is an important usability detail.\par
+And speaking of forms with dozens of fields, you might want to split the form up into fieldsets:\par
+polls/admin.py\'b6\par
+\par
+from django.contrib import admin\par
+\par
+from .models import Question\par
+\par
+\par
+class QuestionAdmin(admin.ModelAdmin):\par
+    fieldsets = [\par
+        (None,               \{'fields': ['question_text']\}),\par
+        ('Date information', \{'fields': ['pub_date']\}),\par
+    ]\par
+\par
+admin.site.register(Question, QuestionAdmin)\par
+The first element of each tuple in fieldsets is the title of the fieldset. Here\rquote s what our form looks like now:\par
+ \par
+Adding related objects\'b6\par
+OK, we have our Question admin page, but a Question has multiple Choices, and the admin page doesn\rquote t display choices.\par
+Yet.\par
+There are two ways to solve this problem. The first is to register Choice with the admin just as we did with Question. That\rquote s easy:\par
+polls/admin.py\'b6\par
+\par
+from django.contrib import admin\par
+\par
+from .models import Choice, Question\par
+# ...\par
+admin.site.register(Choice)\par
+Now \ldblquote Choices\rdblquote  is an available option in the Django admin. The \ldblquote Add choice\rdblquote  form looks like this:\par
+ \par
+In that form, the \ldblquote Question\rdblquote  field is a select box containing every question in the database. Django knows that a ForeignKey should be represented in the admin as a <select> box. In our case, only one question exists at this point.\par
+Also note the \ldblquote Add Another\rdblquote  link next to \ldblquote Question.\rdblquote  Every object with a ForeignKey relationship to another gets this for free. When you click \ldblquote Add Another\rdblquote , you\rquote ll get a popup window with the \ldblquote Add question\rdblquote  form. If you add a question in that window and click \ldblquote Save\rdblquote , Django will save the question to the database and dynamically add it as the selected choice on the \ldblquote Add choice\rdblquote  form you\rquote re looking at.\par
+But, really, this is an inefficient way of adding Choice objects to the system. It\rquote d be better if you could add a bunch of Choices directly when you create the Question object. Let\rquote s make that happen.\par
+Remove the register() call for the Choice model. Then, edit the Question registration code to read:\par
+polls/admin.py\'b6\par
+\par
+from django.contrib import admin\par
+\par
+from .models import Choice, Question\par
+\par
+\par
+class ChoiceInline(admin.StackedInline):\par
+    model = Choice\par
+    extra = 3\par
+\par
+\par
+class QuestionAdmin(admin.ModelAdmin):\par
+    fieldsets = [\par
+        (None,               \{'fields': ['question_text']\}),\par
+        ('Date information', \{'fields': ['pub_date'], 'classes': ['collapse']\}),\par
+    ]\par
+    inlines = [ChoiceInline]\par
+\par
+admin.site.register(Question, QuestionAdmin)\par
+This tells Django: \ldblquote Choice objects are edited on the Question admin page. By default, provide enough fields for 3 choices.\rdblquote\par
+Load the \ldblquote Add question\rdblquote  page to see how that looks:\par
+ \par
+It works like this: There are three slots for related Choices \f1\endash\f0  as specified by extra \f1\endash\f0  and each time you come back to the \f1\ldblquote\f0 Change\f1\rdblquote\f0  page for an already-created object, you get another three extra slots.\par
+At the end of the three current slots you will find an \f1\ldblquote\f0 Add another Choice\f1\rdblquote\f0  link. If you click on it, a new slot will be added. If you want to remove the added slot, you can click on the X to the top right of the added slot. Note that you can\f1\rquote\f0 t remove the original three slots. This image shows an added slot:\par
+ \par
+One small problem, though. It takes a lot of screen space to display all the fields for entering related Choice objects. For that reason, Django offers a tabular way of displaying inline related objects; you just need to change the ChoiceInline declaration to read:\par
+polls/admin.py\'b6\par
+\par
+class ChoiceInline(admin.TabularInline):\par
+    #...\par
+With that TabularInline (instead of StackedInline), the related objects are displayed in a more compact, table-based format:\par
+ \par
+Note that there is an extra \ldblquote Delete?\rdblquote  column that allows removing rows added using the \ldblquote Add Another Choice\rdblquote  button and rows that have already been saved.\par
+Customize the admin change list\'b6\par
+Now that the Question admin page is looking good, let\rquote s make some tweaks to the \ldblquote change list\rdblquote  page \f1\endash\f0  the one that displays all the questions in the system.\par
+Here\f1\rquote\f0 s what it looks like at this point:\par
+ \par
+By default, Django displays the str() of each object. But sometimes it\f1\rquote\f0 d be more helpful if we could display individual fields. To do that, use the list_display admin option, which is a tuple of field names to display, as columns, on the change list page for the object:\par
+polls/admin.py\'b6\par
+\par
+class QuestionAdmin(admin.ModelAdmin):\par
+    # ...\par
+    list_display = ('question_text', 'pub_date')\par
+Just for good measure, let\rquote s also include the was_published_recently() method from Tutorial 2:\par
+polls/admin.py\'b6\par
+\par
+class QuestionAdmin(admin.ModelAdmin):\par
+    # ...\par
+    list_display = ('question_text', 'pub_date', 'was_published_recently')\par
+Now the question change list page looks like this:\par
+ \par
+You can click on the column headers to sort by those values \f1\endash\f0  except in the case of the was_published_recently header, because sorting by the output of an arbitrary method is not supported. Also note that the column header for was_published_recently is, by default, the name of the method (with underscores replaced with spaces), and that each line contains the string representation of the output.\par
+You can improve that by giving that method (in polls/models.py) a few attributes, as follows:\par
+polls/models.py\'b6\par
+\par
+class Question(models.Model):\par
+    # ...\par
+    def was_published_recently(self):\par
+        now = timezone.now()\par
+        return now - datetime.timedelta(days=1) <= self.pub_date <= now\par
+    was_published_recently.admin_order_field = 'pub_date'\par
+    was_published_recently.boolean = True\par
+    was_published_recently.short_description = 'Published recently?'\par
+For more information on these method properties, see list_display.\par
+Edit your polls/admin.py file again and add an improvement to the Question change list page: filters using the list_filter. Add the following line to QuestionAdmin:\par
+list_filter = ['pub_date']\par
+That adds a \ldblquote Filter\rdblquote  sidebar that lets people filter the change list by the pub_date field:\par
+ \par
+The type of filter displayed depends on the type of field you\rquote re filtering on. Because pub_date is a DateTimeField, Django knows to give appropriate filter options: \ldblquote Any date\rdblquote , \ldblquote Today\rdblquote , \ldblquote Past 7 days\rdblquote , \ldblquote This month\rdblquote , \ldblquote This year\rdblquote .\par
+This is shaping up well. Let\rquote s add some search capability:\par
+search_fields = ['question_text']\par
+That adds a search box at the top of the change list. When somebody enters search terms, Django will search the question_text field. You can use as many fields as you\rquote d like \f1\endash\f0  although because it uses a LIKE query behind the scenes, limiting the number of search fields to a reasonable number will make it easier for your database to do the search.\par
+Now\f1\rquote\f0 s also a good time to note that change lists give you free pagination. The default is to display 100 items per page. Change list pagination, search boxes, filters, date-hierarchies, and column-header-ordering all work together like you think they should.\par
+Customize the admin look and feel\'b6\par
+Clearly, having \ldblquote Django administration\rdblquote  at the top of each admin page is ridiculous. It\rquote s just placeholder text.\par
+That\rquote s easy to change, though, using Django\rquote s template system. The Django admin is powered by Django itself, and its interfaces use Django\rquote s own template system.\par
+Customizing your project\rquote s templates\'b6\par
+Create a templates directory in your project directory (the one that contains manage.py). Templates can live anywhere on your filesystem that Django can access. (Django runs as whatever user your server runs.) However, keeping your templates within the project is a good convention to follow.\par
+Open your settings file (mysite/settings.py, remember) and add a DIRS option in the TEMPLATES setting:\par
+mysite/settings.py\'b6\par
+\par
+TEMPLATES = [\par
+    \{\par
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',\par
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],\par
+        'APP_DIRS': True,\par
+        'OPTIONS': \{\par
+            'context_processors': [\par
+                'django.template.context_processors.debug',\par
+                'django.template.context_processors.request',\par
+                'django.contrib.auth.context_processors.auth',\par
+                'django.contrib.messages.context_processors.messages',\par
+            ],\par
+        \},\par
+    \},\par
+]\par
+DIRS is a list of filesystem directories to check when loading Django templates; it\rquote s a search path.\par
+Organizing templates\par
+Just like the static files, we could have all our templates together, in one big templates directory, and it would work perfectly well. However, templates that belong to a particular application should be placed in that application\rquote s template directory (e.g. polls/templates) rather than the project\rquote s (templates). We\rquote ll discuss in more detail in the reusable apps tutorial why we do this.\par
+Now create a directory called admin inside templates, and copy the template admin/base_site.html from within the default Django admin template directory in the source code of Django itself (django/contrib/admin/templates) into that directory.\par
+Where are the Django source files?\par
+If you have difficulty finding where the Django source files are located on your system, run the following command:\par
+?/? ? \par
+$ python -c "import django; print(django.__path__)"\par
+Then, just edit the file and replace \{\{ site_header|default:_('Django administration') \}\} (including the curly braces) with your own site\rquote s name as you see fit. You should end up with a section of code like:\par
+\{% block branding %\}\par
+<h1 id="site-name"><a href="\{% url 'admin:index' %\}">Polls Administration</a></h1>\par
+\{% endblock %\}\par
+We use this approach to teach you how to override templates. In an actual project, you would probably use the django.contrib.admin.AdminSite.site_header attribute to more easily make this particular customization.\par
+This template file contains lots of text like \{% block branding %\} and \{\{ title \}\}. The \{% and \{\{ tags are part of Django\rquote s template language. When Django renders admin/base_site.html, this template language will be evaluated to produce the final HTML page, just like we saw in Tutorial 3.\par
+Note that any of Django\rquote s default admin templates can be overridden. To override a template, just do the same thing you did with base_site.html \f1\endash\f0  copy it from the default directory into your custom directory, and make changes.\par
+Customizing your application\f1\rquote\f0 s templates\'b6\par
+Astute readers will ask: But if DIRS was empty by default, how was Django finding the default admin templates? The answer is that, since APP_DIRS is set to True, Django automatically looks for a templates/ subdirectory within each application package, for use as a fallback (don\rquote t forget that django.contrib.admin is an application).\par
+Our poll application is not very complex and doesn\rquote t need custom admin templates. But if it grew more sophisticated and required modification of Django\rquote s standard admin templates for some of its functionality, it would be more sensible to modify the application\rquote s templates, rather than those in the project. That way, you could include the polls application in any new project and be assured that it would find the custom templates it needed.\par
+See the template loading documentation for more information about how Django finds its templates.\par
+Customize the admin index page\'b6\par
+On a similar note, you might want to customize the look and feel of the Django admin index page.\par
+By default, it displays all the apps in INSTALLED_APPS that have been registered with the admin application, in alphabetical order. You may want to make significant changes to the layout. After all, the index is probably the most important page of the admin, and it should be easy to use.\par
+The template to customize is admin/index.html. (Do the same as with admin/base_site.html in the previous section \f1\endash\f0  copy it from the default directory to your custom template directory). Edit the file, and you\f1\rquote\f0 ll see it uses a template variable called app_list. That variable contains every installed Django app. Instead of using that, you can hard-code links to object-specific admin pages in whatever way you think is best.\par
+What\f1\rquote\f0 s next?\'b6\par
+The beginner tutorial ends here. In the meantime, you might want to check out some pointers on where to go from here.\par
+If you are familiar with Python packaging and interested in learning how to turn polls into a \ldblquote reusable app\rdblquote , check out Advanced tutorial: How to write reusable apps.\par
+\par
+\par
+\par
+\par
+\par
+\cf0 *********************************    page 9    **********************************\par
+\par
+\par
+\par
+Advanced tutorial: How to write reusable apps\'b6\par
+This advanced tutorial begins where Tutorial 7 left off. We\rquote ll be turning our Web-poll into a standalone Python package you can reuse in new projects and share with other people.\par
+If you haven\rquote t recently completed Tutorials 1\f1\endash\f0 7, we encourage you to review these so that your example project matches the one described below.\par
+Reusability matters\'b6\par
+It\rquote s a lot of work to design, build, test and maintain a web application. Many Python and Django projects share common problems. Wouldn\rquote t it be great if we could save some of this repeated work?\par
+Reusability is the way of life in Python. The Python Package Index (PyPI) has a vast range of packages you can use in your own Python programs. Check out Django Packages for existing reusable apps you could incorporate in your project. Django itself is also just a Python package. This means that you can take existing Python packages or Django apps and compose them into your own web project. You only need to write the parts that make your project unique.\par
+Let\rquote s say you were starting a new project that needed a polls app like the one we\rquote ve been working on. How do you make this app reusable? Luckily, you\rquote re well on the way already. In Tutorial 3, we saw how we could decouple polls from the project-level URLconf using an include. In this tutorial, we\rquote ll take further steps to make the app easy to use in new projects and ready to publish for others to install and use.\par
+Package? App?\par
+A Python package provides a way of grouping related Python code for easy reuse. A package contains one or more files of Python code (also known as \ldblquote modules\rdblquote ).\par
+A package can be imported with import foo.bar or from foo import bar. For a directory (like polls) to form a package, it must contain a special file __init__.py, even if this file is empty.\par
+A Django application is just a Python package that is specifically intended for use in a Django project. An application may use common Django conventions, such as having models, tests, urls, and views submodules.\par
+Later on we use the term packaging to describe the process of making a Python package easy for others to install. It can be a little confusing, we know.\par
+Your project and your reusable app\'b6\par
+After the previous tutorials, our project should look like this:\par
+mysite/\par
+    manage.py\par
+    mysite/\par
+        __init__.py\par
+        settings.py\par
+        urls.py\par
+        wsgi.py\par
+    polls/\par
+        __init__.py\par
+        admin.py\par
+        migrations/\par
+            __init__.py\par
+            0001_initial.py\par
+        models.py\par
+        static/\par
+            polls/\par
+                images/\par
+                    background.gif\par
+                style.css\par
+        templates/\par
+            polls/\par
+                detail.html\par
+                index.html\par
+                results.html\par
+        tests.py\par
+        urls.py\par
+        views.py\par
+    templates/\par
+        admin/\par
+            base_site.html\par
+You created mysite/templates in Tutorial 7, and polls/templates in Tutorial 3. Now perhaps it is clearer why we chose to have separate template directories for the project and application: everything that is part of the polls application is in polls. It makes the application self-contained and easier to drop into a new project.\par
+The polls directory could now be copied into a new Django project and immediately reused. It\rquote s not quite ready to be published though. For that, we need to package the app to make it easy for others to install.\par
+Installing some prerequisites\'b6\par
+The current state of Python packaging is a bit muddled with various tools. For this tutorial, we\rquote re going to use setuptools to build our package. It\rquote s the recommended packaging tool (merged with the distribute fork). We\rquote ll also be using pip to install and uninstall it. You should install these two packages now. If you need help, you can refer to how to install Django with pip. You can install setuptools the same way.\par
+Packaging your app\'b6\par
+Python packaging refers to preparing your app in a specific format that can be easily installed and used. Django itself is packaged very much like this. For a small app like polls, this process isn\rquote t too difficult.\par
+First, create a parent directory for polls, outside of your Django project. Call this directory django-polls.\par
+Choosing a name for your app\par
+When choosing a name for your package, check resources like PyPI to avoid naming conflicts with existing packages. It\rquote s often useful to prepend django- to your module name when creating a package to distribute. This helps others looking for Django apps identify your app as Django specific.\par
+Application labels (that is, the final part of the dotted path to application packages) must be unique in INSTALLED_APPS. Avoid using the same label as any of the Django contrib packages, for example auth, admin, or messages.\par
+Move the polls directory into the django-polls directory.\par
+Create a file django-polls/README.rst with the following contents:\par
+django-polls/README.rst\'b6\par
+\par
+=====\par
+Polls\par
+=====\par
+\par
+Polls is a simple Django app to conduct Web-based polls. For each\par
+question, visitors can choose between a fixed number of answers.\par
+\par
+Detailed documentation is in the "docs" directory.\par
+\par
+Quick start\par
+-----------\par
+\par
+1. Add "polls" to your INSTALLED_APPS setting like this::\par
+\par
+    INSTALLED_APPS = [\par
+        ...\par
+        'polls',\par
+    ]\par
+\par
+2. Include the polls URLconf in your project urls.py like this::\par
+\par
+    path('polls/', include('polls.urls')),\par
+\par
+3. Run `python manage.py migrate` to create the polls models.\par
+\par
+4. Start the development server and visit {{\field{\*\fldinst{HYPERLINK http://127.0.0.1:8000/admin/ }}{\fldrslt{http://127.0.0.1:8000/admin/\ul0\cf0}}}}\f0\fs24\par
+   to create a poll (you'll need the Admin app enabled).\par
+\par
+5. Visit {{\field{\*\fldinst{HYPERLINK http://127.0.0.1:8000/polls/ }}{\fldrslt{http://127.0.0.1:8000/polls/\ul0\cf0}}}}\f0\fs24  to participate in the poll.\par
+Create a django-polls/LICENSE file. Choosing a license is beyond the scope of this tutorial, but suffice it to say that code released publicly without a license is useless. Django and many Django-compatible apps are distributed under the BSD license; however, you\rquote re free to pick your own license. Just be aware that your licensing choice will affect who is able to use your code.\par
+Next we\rquote ll create a setup.py file which provides details about how to build and install the app. A full explanation of this file is beyond the scope of this tutorial, but the setuptools docs have a good explanation. Create a file django-polls/setup.py with the following contents:\par
+django-polls/setup.py\'b6\par
+\par
+import os\par
+from setuptools import find_packages, setup\par
+\par
+with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as readme:\par
+    README = readme.read()\par
+\par
+# allow setup.py to be run from any path\par
+os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))\par
+\par
+setup(\par
+    name='django-polls',\par
+    version='0.1',\par
+    packages=find_packages(),\par
+    include_package_data=True,\par
+    license='BSD License',  # example license\par
+    description='A simple Django app to conduct Web-based polls.',\par
+    long_description=README,\par
+    url='{{\field{\*\fldinst{HYPERLINK https://www.example.com/ }}{\fldrslt{https://www.example.com/\ul0\cf0}}}}\f0\fs24 ',\par
+    author='Your Name',\par
+    author_email='yourname@example.com',\par
+    classifiers=[\par
+        'Environment :: Web Environment',\par
+        'Framework :: Django',\par
+        'Framework :: Django :: X.Y',  # replace "X.Y" as appropriate\par
+        'Intended Audience :: Developers',\par
+        'License :: OSI Approved :: BSD License',  # example license\par
+        'Operating System :: OS Independent',\par
+        'Programming Language :: Python',\par
+        'Programming Language :: Python :: 3.5',\par
+        'Programming Language :: Python :: 3.6',\par
+        'Topic :: Internet :: WWW/HTTP',\par
+        'Topic :: Internet :: WWW/HTTP :: Dynamic Content',\par
+    ],\par
+)\par
+Only Python modules and packages are included in the package by default. To include additional files, we\rquote ll need to create a MANIFEST.in file. The setuptools docs referred to in the previous step discuss this file in more details. To include the templates, the README.rst and our LICENSE file, create a file django-polls/MANIFEST.in with the following contents:\par
+django-polls/MANIFEST.in\'b6\par
+\par
+include LICENSE\par
+include README.rst\par
+recursive-include polls/static *\par
+recursive-include polls/templates *\par
+It\rquote s optional, but recommended, to include detailed documentation with your app. Create an empty directory django-polls/docs for future documentation. Add an additional line to django-polls/MANIFEST.in:\par
+recursive-include docs *\par
+Note that the docs directory won\rquote t be included in your package unless you add some files to it. Many Django apps also provide their documentation online through sites like readthedocs.org.\par
+Try building your package with python setup.py sdist (run from inside django-polls). This creates a directory called dist and builds your new package, django-polls-0.1.tar.gz.\par
+For more information on packaging, see Python\rquote s Tutorial on Packaging and Distributing Projects.\par
+Using your own package\'b6\par
+Since we moved the polls directory out of the project, it\rquote s no longer working. We\rquote ll now fix this by installing our new django-polls package.\par
+Installing as a user library\par
+The following steps install django-polls as a user library. Per-user installs have a lot of advantages over installing the package system-wide, such as being usable on systems where you don\rquote t have administrator access as well as preventing the package from affecting system services and other users of the machine.\par
+Note that per-user installations can still affect the behavior of system tools that run as that user, so virtualenv is a more robust solution (see below).\par
+To install the package, use pip (you already installed it, right?):\par
+pip install --user django-polls/dist/django-polls-0.1.tar.gz\par
+With luck, your Django project should now work correctly again. Run the server again to confirm this.\par
+To uninstall the package, use pip:\par
+pip uninstall django-polls\par
+Publishing your app\'b6\par
+Now that we\rquote ve packaged and tested django-polls, it\rquote s ready to share with the world! If this wasn\rquote t just an example, you could now:\par
+Email the package to a friend.\par
+Upload the package on your website.\par
+Post the package on a public repository, such as the Python Package Index (PyPI). packaging.python.org has a good tutorial for doing this.\par
+Installing Python packages with virtualenv\'b6\par
+Earlier, we installed the polls app as a user library. This has some disadvantages:\par
+Modifying the user libraries can affect other Python software on your system.\par
+You won\rquote t be able to run multiple versions of this package (or others with the same name).\par
+Typically, these situations only arise once you\rquote re maintaining several Django projects. When they do, the best solution is to use virtualenv. This tool allows you to maintain multiple isolated Python environments, each with its own copy of the libraries and package namespace.\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+************************************     page 10   *********************************\par
+\par
+\par
+\par
+\par
+What to read next\'b6\par
+So you\rquote ve read all the introductory material and have decided you\rquote d like to keep using Django. We\rquote ve only just scratched the surface with this intro (in fact, if you\rquote ve read every single word, you\rquote ve read about 5% of the overall documentation).\par
+So what\rquote s next?\par
+Well, we\rquote ve always been big fans of learning by doing. At this point you should know enough to start a project of your own and start fooling around. As you need to learn new tricks, come back to the documentation.\par
+We\rquote ve put a lot of effort into making Django\rquote s documentation useful, easy to read and as complete as possible. The rest of this document explains more about how the documentation works so that you can get the most out of it.\par
+(Yes, this is documentation about documentation. Rest assured we have no plans to write a document about how to read the document about documentation.)\par
+Finding documentation\'b6\par
+Django\rquote s got a lot of documentation \f1\endash\f0  almost 450,000 words and counting \f1\endash\f0  so finding what you need can sometimes be tricky. A few good places to start are the Search Page and the Index.\par
+Or you can just browse around!\par
+How the documentation is organized\'b6\par
+Django\rquote s main documentation is broken up into \ldblquote chunks\rdblquote  designed to fill different needs:\par
+The introductory material is designed for people new to Django \f1\endash\f0  or to Web development in general. It doesn\f1\rquote\f0 t cover anything in depth, but instead gives a high-level overview of how developing in Django \f1\ldblquote\f0 feels\f1\rdblquote\f0 .\par
+The topic guides, on the other hand, dive deep into individual parts of Django. There are complete guides to Django\f1\rquote\f0 s model system, template engine, forms framework, and much more.\par
+This is probably where you\f1\rquote\f0 ll want to spend most of your time; if you work your way through these guides you should come out knowing pretty much everything there is to know about Django.\par
+Web development is often broad, not deep \f1\endash\f0  problems span many domains. We\f1\rquote\f0 ve written a set of how-to guides that answer common \f1\ldblquote\f0 How do I \'85?\f1\rdblquote\f0  questions. Here you\f1\rquote\f0 ll find information about generating PDFs with Django, writing custom template tags, and more.\par
+Answers to really common questions can also be found in the FAQ.\par
+The guides and how-to\f1\rquote\f0 s don\f1\rquote\f0 t cover every single class, function, and method available in Django \f1\endash\f0  that would be overwhelming when you\f1\rquote\f0 re trying to learn. Instead, details about individual classes, functions, methods, and modules are kept in the reference. This is where you\f1\rquote\f0 ll turn to find the details of a particular function or whatever you need.\par
+If you are interested in deploying a project for public use, our docs have several guides for various deployment setups as well as a deployment checklist for some things you\f1\rquote\f0 ll need to think about.\par
+Finally, there\f1\rquote\f0 s some \f1\ldblquote\f0 specialized\f1\rdblquote\f0  documentation not usually relevant to most developers. This includes the release notes and internals documentation for those who want to add code to Django itself, and a few other things that simply don\f1\rquote\f0 t fit elsewhere.\par
+How documentation is updated\'b6\par
+Just as the Django code base is developed and improved on a daily basis, our documentation is consistently improving. We improve documentation for several reasons:\par
+To make content fixes, such as grammar/typo corrections.\par
+To add information and/or examples to existing sections that need to be expanded.\par
+To document Django features that aren\rquote t yet documented. (The list of such features is shrinking but exists nonetheless.)\par
+To add documentation for new features as new features get added, or as Django APIs or behaviors change.\par
+Django\rquote s documentation is kept in the same source control system as its code. It lives in the docs directory of our Git repository. Each document online is a separate text file in the repository.\par
+Where to get it\'b6\par
+You can read Django documentation in several ways. They are, in order of preference:\par
+On the Web\'b6\par
+The most recent version of the Django documentation lives at {{\field{\*\fldinst{HYPERLINK https://docs.djangoproject.com/en/dev/ }}{\fldrslt{https://docs.djangoproject.com/en/dev/\ul0\cf0}}}}\f0\fs24 . These HTML pages are generated automatically from the text files in source control. That means they reflect the \ldblquote latest and greatest\rdblquote  in Django \f1\endash\f0  they include the very latest corrections and additions, and they discuss the latest Django features, which may only be available to users of the Django development version. (See Differences between versions below.)\par
+We encourage you to help improve the docs by submitting changes, corrections and suggestions in the ticket system. The Django developers actively monitor the ticket system and use your feedback to improve the documentation for everybody.\par
+Note, however, that tickets should explicitly relate to the documentation, rather than asking broad tech-support questions. If you need help with your particular Django setup, try the django-users mailing list or the #django IRC channel instead.\par
+In plain text\'b6\par
+For offline reading, or just for convenience, you can read the Django documentation in plain text.\par
+If you\rquote re using an official release of Django, the zipped package (tarball) of the code includes a docs/ directory, which contains all the documentation for that release.\par
+If you\rquote re using the development version of Django (aka the master branch), the docs/ directory contains all of the documentation. You can update your Git checkout to get the latest changes.\par
+One low-tech way of taking advantage of the text documentation is by using the Unix grep utility to search for a phrase in all of the documentation. For example, this will show you each mention of the phrase \ldblquote max_length\rdblquote  in any Django document:\par
+?/? ? \par
+$ grep -r max_length /path/to/django/docs/\par
+As HTML, locally\'b6\par
+You can get a local copy of the HTML documentation following a few easy steps:\par
+Django\rquote s documentation uses a system called Sphinx to convert from plain text to HTML. You\rquote ll need to install Sphinx by either downloading and installing the package from the Sphinx website, or with pip:\par
+?/? ? \par
+$ pip install Sphinx\par
+Then, just use the included Makefile to turn the documentation into HTML:\par
+$ cd path/to/django/docs\par
+$ make html\par
+You\rquote ll need GNU Make installed for this.\par
+If you\rquote re on Windows you can alternatively use the included batch file:\par
+cd path\\to\\django\\docs\par
+make.bat html\par
+The HTML documentation will be placed in docs/_build/html.\par
+Differences between versions\'b6\par
+The text documentation in the master branch of the Git repository contains the \ldblquote latest and greatest\rdblquote  changes and additions. These changes include documentation of new features targeted for Django\rquote s next feature release. For that reason, it\rquote s worth pointing out our policy to highlight recent changes and additions to Django.\par
+We follow this policy:\par
+The development documentation at {{\field{\*\fldinst{HYPERLINK https://docs.djangoproject.com/en/dev/ }}{\fldrslt{https://docs.djangoproject.com/en/dev/\ul0\cf0}}}}\f0\fs24  is from the master branch. These docs correspond to the latest feature release, plus whatever features have been added/changed in the framework since then.\par
+As we add features to Django\rquote s development version, we update the documentation in the same Git commit transaction.\par
+To distinguish feature changes/additions in the docs, we use the phrase: \ldblquote New in Django Development version\rdblquote  for the version of Django that hasn\rquote t been released yet, or \ldblquote New in version X.Y\rdblquote  for released versions.\par
+Documentation fixes and improvements may be backported to the last release branch, at the discretion of the committer, however, once a version of Django is no longer supported, that version of the docs won\rquote t get any further updates.\par
+The main documentation Web page includes links to documentation for previous versions. Be sure you are using the version of the docs corresponding to the version of Django you.\par
+\par
+\par
+\par
+\par
+\par
+****************************      page 11    ****************************************\par
+\par
+\par
+\par
+\par
+\par
+Writing your first patch for Django\'b6\par
+Introduction\'b6\par
+Interested in giving back to the community a little? Maybe you\rquote ve found a bug in Django that you\rquote d like to see fixed, or maybe there\rquote s a small feature you want added.\par
+Contributing back to Django itself is the best way to see your own concerns addressed. This may seem daunting at first, but it\rquote s really pretty simple. We\rquote ll walk you through the entire process, so you can learn by example.\par
+Who\rquote s this tutorial for?\'b6\par
+See also\par
+If you are looking for a reference on how to submit patches, see the Submitting patches documentation.\par
+For this tutorial, we expect that you have at least a basic understanding of how Django works. This means you should be comfortable going through the existing tutorials on writing your first Django app. In addition, you should have a good understanding of Python itself. But if you don\rquote t, Dive Into Python is a fantastic (and free) online book for beginning Python programmers.\par
+Those of you who are unfamiliar with version control systems and Trac will find that this tutorial and its links include just enough information to get started. However, you\rquote ll probably want to read some more about these different tools if you plan on contributing to Django regularly.\par
+For the most part though, this tutorial tries to explain as much as possible, so that it can be of use to the widest audience.\par
+Where to get help:\par
+If you\rquote re having trouble going through this tutorial, please post a message to django-developers or drop by #django-dev on irc.freenode.net to chat with other Django users who might be able to help.\par
+What does this tutorial cover?\'b6\par
+We\rquote ll be walking you through contributing a patch to Django for the first time. By the end of this tutorial, you should have a basic understanding of both the tools and the processes involved. Specifically, we\rquote ll be covering the following:\par
+Installing Git.\par
+Downloading a copy of Django\rquote s development version.\par
+Running Django\rquote s test suite.\par
+Writing a test for your patch.\par
+Writing the code for your patch.\par
+Testing your patch.\par
+Submitting a pull request.\par
+Where to look for more information.\par
+Once you\rquote re done with the tutorial, you can look through the rest of Django\rquote s documentation on contributing. It contains lots of great information and is a must read for anyone who\rquote d like to become a regular contributor to Django. If you\rquote ve got questions, it\rquote s probably got the answers.\par
+Python 3 required!\par
+The current version of Django doesn\rquote t support Python 2.7. Get Python 3 at Python\rquote s download page or with your operating system\rquote s package manager.\par
+For Windows users\par
+When installing Python on Windows, make sure you check the option \ldblquote Add python.exe to Path\rdblquote , so that it is always available on the command line.\par
+Code of Conduct\'b6\par
+As a contributor, you can help us keep the Django community open and inclusive. Please read and follow our Code of Conduct.\par
+Installing Git\'b6\par
+For this tutorial, you\rquote ll need Git installed to download the current development version of Django and to generate patch files for the changes you make.\par
+To check whether or not you have Git installed, enter git into the command line. If you get messages saying that this command could not be found, you\rquote ll have to download and install it, see Git\rquote s download page.\par
+If you\rquote re not that familiar with Git, you can always find out more about its commands (once it\rquote s installed) by typing git help into the command line.\par
+Getting a copy of Django\rquote s development version\'b6\par
+The first step to contributing to Django is to get a copy of the source code. First, fork Django on GitHub. Then, from the command line, use the cd command to navigate to the directory where you\rquote ll want your local copy of Django to live.\par
+Download the Django source code repository using the following command:\par
+?/? ? \par
+$ git clone git@github.com:YourGitHubName/django.git\par
+Low bandwidth connection?\par
+You can add the --depth 1 argument to git clone to skip downloading all of Django\rquote s commit history, which reduces data transfer from ~250 MB to ~70 MB.\par
+Now that you have a local copy of Django, you can install it just like you would install any package using pip. The most convenient way to do so is by using a virtual environment, which is a feature built into Python that allows you to keep a separate directory of installed packages for each of your projects so that they don\rquote t interfere with each other.\par
+It\rquote s a good idea to keep all your virtual environments in one place, for example in .virtualenvs/ in your home directory.\par
+Create a new virtual environment by running:\par
+?/? ? \par
+$ python3 -m venv ~/.virtualenvs/djangodev\par
+The path is where the new environment will be saved on your computer.\par
+The final step in setting up your virtual environment is to activate it:\par
+$ source ~/.virtualenvs/djangodev/bin/activate\par
+If the source command is not available, you can try using a dot instead:\par
+$ . ~/.virtualenvs/djangodev/bin/activate\par
+For Windows users\par
+To activate your virtual environment on Windows, run:\par
+...\\> %HOMEPATH%\\.virtualenvs\\djangodev\\Scripts\\activate.bat\par
+You have to activate the virtual environment whenever you open a new terminal window. virtualenvwrapper is a useful tool for making this more convenient.\par
+The name of the currently activated virtual environment is displayed on the command line to help you keep track of which one you are using. Anything you install through pip while this name is displayed will be installed in that virtual environment, isolated from other environments and system-wide packages.\par
+Go ahead and install the previously cloned copy of Django:\par
+?/? ? \par
+$ pip install -e /path/to/your/local/clone/django/\par
+The installed version of Django is now pointing at your local copy. You will immediately see any changes you make to it, which is of great help when writing your first patch.\par
+Running Django\rquote s test suite for the first time\'b6\par
+When contributing to Django it\rquote s very important that your code changes don\rquote t introduce bugs into other areas of Django. One way to check that Django still works after you make your changes is by running Django\rquote s test suite. If all the tests still pass, then you can be reasonably sure that your changes work and haven\rquote t broken other parts Django. If you\rquote ve never run Django\rquote s test suite before, it\rquote s a good idea to run it once beforehand to get familiar with its output.\par
+Before running the test suite, install its dependencies by cd-ing into the Django tests/ directory and then running:\par
+?/? ? \par
+$ pip install -r requirements/py3.txt\par
+If you encounter an error during the installation, your system might be missing a dependency for one or more of the Python packages. Consult the failing package\rquote s documentation or search the Web with the error message that you encounter.\par
+Now we are ready to run the test suite. If you\rquote re using GNU/Linux, macOS, or some other flavor of Unix, run:\par
+?/? ? \par
+$ ./runtests.py\par
+Now sit back and relax. Django\rquote s entire test suite has thousands of tests, and it takes at least a few minutes run, depending on the speed of your computer.\par
+While Django\rquote s test suite is running, you\rquote ll see a stream of characters representing the status of each test as it completes. E indicates that an error was raised during a test, and F indicates that a test\rquote s assertions failed. Both of these are considered to be test failures. Meanwhile, x and s indicated expected failures and skipped tests, respectively. Dots indicate passing tests.\par
+Skipped tests are typically due to missing external libraries required to run the test; see Running all the tests for a list of dependencies and be sure to install any for tests related to the changes you are making (we won\rquote t need any for this tutorial). Some tests are specific to a particular database backend and will be skipped if not testing with that backend. SQLite is the database backend for the default settings. To run the tests using a different backend, see Using another settings module.\par
+Once the tests complete, you should be greeted with a message informing you whether the test suite passed or failed. Since you haven\rquote t yet made any changes to Django\rquote s code, the entire test suite should pass. If you get failures or errors make sure you\rquote ve followed all of the previous steps properly. See Running the unit tests for more information.\par
+Note that the latest Django master may not always be stable. When developing against master, you can check Django\rquote s continuous integration builds to determine if the failures are specific to your machine or if they are also present in Django\rquote s official builds. If you click to view a particular build, you can view the \ldblquote Configuration Matrix\rdblquote  which shows failures broken down by Python version and database backend.\par
+Note\par
+For this tutorial and the ticket we\rquote re working on, testing against SQLite is sufficient, however, it\rquote s possible (and sometimes necessary) to run the tests using a different database.\par
+Working on a feature\'b6\par
+For this tutorial, we\rquote ll work on a \ldblquote fake ticket\rdblquote  as a case study. Here are the imaginary details:\par
+Ticket #99999 \f1\endash\f0  Allow making toast\par
+Django should provide a function django.shortcuts.make_toast() that returns 'toast'.\par
+We\f1\rquote\f0 ll now implement this feature and associated tests.\par
+Creating a branch for your patch\'b6\par
+Before making any changes, create a new branch for the ticket:\par
+?/? ? \par
+$ git checkout -b ticket_99999\par
+You can choose any name that you want for the branch, \ldblquote ticket_99999\rdblquote  is an example. All changes made in this branch will be specific to the ticket and won\rquote t affect the main copy of the code that we cloned earlier.\par
+Writing some tests for your ticket\'b6\par
+In most cases, for a patch to be accepted into Django it has to include tests. For bug fix patches, this means writing a regression test to ensure that the bug is never reintroduced into Django later on. A regression test should be written in such a way that it will fail while the bug still exists and pass once the bug has been fixed. For patches containing new features, you\rquote ll need to include tests which ensure that the new features are working correctly. They too should fail when the new feature is not present, and then pass once it has been implemented.\par
+A good way to do this is to write your new tests first, before making any changes to the code. This style of development is called test-driven development and can be applied to both entire projects and single patches. After writing your tests, you then run them to make sure that they do indeed fail (since you haven\rquote t fixed that bug or added that feature yet). If your new tests don\rquote t fail, you\rquote ll need to fix them so that they do. After all, a regression test that passes regardless of whether a bug is present is not very helpful at preventing that bug from reoccurring down the road.\par
+Now for our hands-on example.\par
+Writing a test for ticket #99999\'b6\par
+In order to resolve this ticket, we\rquote ll add a make_toast() function to the top-level django module. First we are going to write a test that tries to use the function and check that its output looks correct.\par
+Navigate to Django\rquote s tests/shortcuts/ folder and create a new file test_make_toast.py. Add the following code:\par
+from django.shortcuts import make_toast\par
+from django.test import SimpleTestCase\par
+\par
+\par
+class MakeToastTests(SimpleTestCase):\par
+    def test_make_toast(self):\par
+        self.assertEqual(make_toast(), 'toast')\par
+This test checks that the make_toast() returns 'toast'.\par
+But this testing thing looks kinda hard\'85\par
+If you\rquote ve never had to deal with tests before, they can look a little hard to write at first glance. Fortunately, testing is a very big subject in computer programming, so there\rquote s lots of information out there:\par
+A good first look at writing tests for Django can be found in the documentation on Writing and running tests.\par
+Dive Into Python (a free online book for beginning Python developers) includes a great introduction to Unit Testing.\par
+After reading those, if you want something a little meatier to sink your teeth into, there\rquote s always the Python unittest documentation.\par
+Running your new test\'b6\par
+Since we haven\rquote t made any modifications to django.shortcuts yet, our test should fail. Let\rquote s run all the tests in the shortcuts folder to make sure that\rquote s really what happens. cd to the Django tests/ directory and run:\par
+?/? ? \par
+$ ./runtests.py shortcuts\par
+If the tests ran correctly, you should see one failure corresponding to the test method we added, with this error:\par
+ImportError: cannot import name 'make_toast' from 'django.shortcuts'\par
+If all of the tests passed, then you\rquote ll want to make sure that you added the new test shown above to the appropriate folder and file name.\par
+Writing the code for your ticket\'b6\par
+Next we\rquote ll be adding the make_toast() function.\par
+Navigate to the django/ folder and open the shortcuts.py file. At the bottom, add:\par
+def make_toast():\par
+    return 'toast'\par
+Now we need to make sure that the test we wrote earlier passes, so we can see whether the code we added is working correctly. Again, navigate to the Django tests/ directory and run:\par
+?/? ? \par
+$ ./runtests.py shortcuts\par
+Everything should pass. If it doesn\rquote t, make sure you correctly added the function to the correct file.\par
+Running Django\rquote s test suite for the second time\'b6\par
+Once you\rquote ve verified that your patch and your test are working correctly, it\rquote s a good idea to run the entire Django test suite just to verify that your change hasn\rquote t introduced any bugs into other areas of Django. While successfully passing the entire test suite doesn\rquote t guarantee your code is bug free, it does help identify many bugs and regressions that might otherwise go unnoticed.\par
+To run the entire Django test suite, cd into the Django tests/ directory and run:\par
+?/? ? \par
+$ ./runtests.py\par
+Writing Documentation\'b6\par
+This is a new feature, so it should be documented. Open the file docs/topics/http/shortcuts.txt and add the following at the end of the file:\par
+``make_toast()``\par
+================\par
+\par
+.. versionadded:: 2.2\par
+\par
+Returns ``'toast'``.\par
+Since this new feature will be in an upcoming release it is also added to the release notes for the next version of Django. Open the release notes for the latest version in docs/releases/, which at time of writing is 2.2.txt. Add a note under the \ldblquote Minor Features\rdblquote  header:\par
+:mod:`django.shortcuts`\par
+~~~~~~~~~~~~~~~~~~~~~~~\par
+\par
+* The new :func:`django.shortcuts.make_toast` function returns ``'toast'``.\par
+For more information on writing documentation, including an explanation of what the versionadded bit is all about, see Writing documentation. That page also includes an explanation of how to build a copy of the documentation locally, so you can preview the HTML that will be generated.\par
+Previewing your changes\'b6\par
+Now it\rquote s time to go through all the changes made in our patch. To stage all the changes ready for commit, run:\par
+?/? ? \par
+$ git add --all\par
+Then display the differences between your current copy of Django (with your changes) and the revision that you initially checked out earlier in the tutorial with:\par
+?/? ? \par
+$ git diff --cached\par
+Use the arrow keys to move up and down.\par
+diff --git a/django/shortcuts.py b/django/shortcuts.py\par
+index 7ab1df0e9d..8dde9e28d9 100644\par
+--- a/django/shortcuts.py\par
++++ b/django/shortcuts.py\par
+@@ -156,3 +156,7 @@ def resolve_url(to, *args, **kwargs):\par
+\par
+     # Finally, fall back and assume it's a URL\par
+     return to\par
++\par
++\par
++def make_toast():\par
++    return 'toast'\par
+diff --git a/docs/releases/2.2.txt b/docs/releases/2.2.txt\par
+index 7d85d30c4a..81518187b3 100644\par
+--- a/docs/releases/2.2.txt\par
++++ b/docs/releases/2.2.txt\par
+@@ -40,6 +40,11 @@ database constraints. Constraints are added to models using the\par
+ Minor features\par
+ --------------\par
+\par
++:mod:`django.shortcuts`\par
++~~~~~~~~~~~~~~~~~~~~~~~\par
++\par
++* The new :func:`django.shortcuts.make_toast` function returns ``'toast'``.\par
++\par
+ :mod:`django.contrib.admin`\par
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~\par
+\par
+diff --git a/docs/topics/http/shortcuts.txt b/docs/topics/http/shortcuts.txt\par
+index 7b3a3a2c00..711bf6bb6d 100644\par
+--- a/docs/topics/http/shortcuts.txt\par
++++ b/docs/topics/http/shortcuts.txt\par
+@@ -271,3 +271,12 @@ This example is equivalent to::\par
+         my_objects = list(MyModel.objects.filter(published=True))\par
+         if not my_objects:\par
+             raise Http404("No MyModel matches the given query.")\par
++\par
++``make_toast()``\par
++================\par
++\par
++.. function:: make_toast()\par
++\par
++.. versionadded:: 2.2\par
++\par
++Returns ``'toast'``.\par
+diff --git a/tests/shortcuts/test_make_toast.py b/tests/shortcuts/test_make_toast.py\par
+new file mode 100644\par
+index 0000000000..6f4c627b6e\par
+--- /dev/null\par
++++ b/tests/shortcuts/test_make_toast.py\par
+@@ -0,0 +1,7 @@\par
++from django.shortcuts import make_toast\par
++from django.test import SimpleTestCase\par
++\par
++\par
++class MakeToastTests(SimpleTestCase):\par
++    def test_make_toast(self):\par
++        self.assertEqual(make_toast(), 'toast')\par
+When you\rquote re done previewing the patch, hit the q key to return to the command line. If the patch\rquote s content looked okay, it\rquote s time to commit the changes.\par
+Committing the changes in the patch\'b6\par
+To commit the changes:\par
+?/? ? \par
+$ git commit\par
+This opens up a text editor to type the commit message. Follow the commit message guidelines and write a message like:\par
+Fixed #99999 -- Added a shortcut function to make toast.\par
+Pushing the commit and making a pull request\'b6\par
+After committing the patch, send it to your fork on GitHub (substitute \ldblquote ticket_99999\rdblquote  with the name of your branch if it\rquote s different):\par
+?/? ? \par
+$ git push origin ticket_99999\par
+You can create a pull request by visiting the Django GitHub page. You\rquote ll see your branch under \ldblquote Your recently pushed branches\rdblquote . Click \ldblquote Compare & pull request\rdblquote  next to it.\par
+Please don\rquote t do it for this tutorial, but on the next page that displays a preview of the patch, you would click \ldblquote Create pull request\rdblquote .\par
+Next steps\'b6\par
+Congratulations, you\rquote ve learned how to make a pull request to Django! Details of more advanced techniques you may need are in Working with Git and GitHub.\par
+Now you can put those skills to good use by helping to improve Django\rquote s codebase.\par
+More information for new contributors\'b6\par
+Before you get too into writing patches for Django, there\rquote s a little more information on contributing that you should probably take a look at:\par
+You should make sure to read Django\rquote s documentation on claiming tickets and submitting patches. It covers Trac etiquette, how to claim tickets for yourself, expected coding style for patches, and many other important details.\par
+First time contributors should also read Django\rquote s documentation for first time contributors. It has lots of good advice for those of us who are new to helping out with Django.\par
+After those, if you\rquote re still hungry for more information about contributing, you can always browse through the rest of Django\rquote s documentation on contributing. It contains a ton of useful information and should be your first source for answering any questions you might have.\par
+Finding your first real ticket\'b6\par
+Once you\rquote ve looked through some of that information, you\rquote ll be ready to go out and find a ticket of your own to write a patch for. Pay special attention to tickets with the \ldblquote easy pickings\rdblquote  criterion. These tickets are often much simpler in nature and are great for first time contributors. Once you\rquote re familiar with contributing to Django, you can move on to writing patches for more difficult and complicated tickets.\par
+If you just want to get started already (and nobody would blame you!), try taking a look at the list of easy tickets that need patches and the easy tickets that have patches which need improvement. If you\rquote re familiar with writing tests, you can also look at the list of easy tickets that need tests. Just remember to follow the guidelines about claiming tickets that were mentioned in the link to Django\rquote s documentation on claiming tickets and submitting patches.\par
+What\rquote s next after creating a pull request?\'b6\par
+After a ticket has a patch, it needs to be reviewed by a second set of eyes. After submitting a pull request, update the ticket metadata by setting the flags on the ticket to say \ldblquote has patch\rdblquote , \ldblquote doesn\rquote t need tests\rdblquote , etc, so others can find it for review. Contributing doesn\rquote t necessarily always mean writing a patch from scratch. Reviewing existing patches is also a very helpful contribution. See Triaging tickets for details.\par
+\par
+\par
+\par
+***********************  end   *********************************\par
+}
+ 

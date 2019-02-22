@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="list-group">
+    {% for  proff_of_university in  proff_of_universites %}
+    <div style="border: 2px solid black;">   
+    <label>proff  Name :   <a href="{% url 'proffodetail'  proff_of_university.id %}" class="list-group-item">{{proff_of_university.proff_name}}</a></label>
+        <img src="{{proff_of_university.proff_image.url}}" height="150px" width="150px">
+    </div>
+        {% endfor %}
+  </div>
+
+  {{proff_of_universites.paginator.page_range}}
+  <center>
+   <div>
+   <span>
+       {% if proff_of_universites.has_previous %}
+           <a href="?page=1">&laquo; first</a>
+           <a href="?page={{ proff_of_universites.previous_page_number }}">previous</a>
+       {% endif %}
+
+       <span>
+           <strong>Page {{ proff_of_universites.number }} of {{ proff_of_universites.paginator.num_pages }}.</strong>
+       </span>
+
+       {% if proff_of_universites.has_next %}
+           <a href="?page={{ proff_of_universites.next_page_number }}">next</a>
+           <a href="?page={{ proff_of_universites.paginator.num_pages }}">last &raquo;</a>
+       {% endif %}
+   </span>
+</div></center>
+{% endblock %}

@@ -1,0 +1,186 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil\fcharset0 Arial Black;}{\f1\fnil Arial Black;}}
+{\*\generator Riched20 10.0.17134}\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\b\f0\fs22\lang9 #   DJANGO  TUTORIAL  IN BASED ON THE SOFT COPY >>>*****\par
+\par
+\par
+Getting started with Django\par
+Depending how new you are to Django, you can try a tutorial, or just dive into the documentation.\par
+Want to learn more about Django? Read the overview to see whether Django is right for your project. \par
+Django overview \par
+Install Django\par
+Before you can use Django, you\rquote ll need to install it. Our complete installation guide covers all the possibilities; this guide will get you to a simple, minimal installation that\rquote ll work while you walk through the introduction.\par
+Django installation guide \par
+Write your first Django app\par
+Installed Django already? Good. Now try this tutorial, which walks you through creating a basic poll application. It\rquote s got two parts:\par
+A public site that lets people view polls and vote in them.\par
+An administrative interface that lets you add, change and delete polls.\par
+Take the tutorial \par
+Sharpen your skills\par
+The official Django documentation covers everything you need to know about Django (and then some).\par
+Read the docs \par
+Join the community\par
+You can help make us better. Find out about upcoming Django events, learn what\rquote s on other Django developers\rquote  minds, find and post jobs, and more.\par
+Join us \par
+Intro to Django\par
+Expand All / Collapse All\par
+Object-relational mapper \par
+\par
+De\f1\u-1279?\f0 ne your data models entirely in Python. You get a rich, dynamic database-access API for free \f1\emdash\f0  but you can still write SQL if needed.\par
+Read more \par
+class Band(models.Model):\par
+    """A model of a rock band."""\par
+    name = models.CharField(max_length=200)\par
+    can_rock = models.BooleanField(default=True)\par
+\par
+\par
+class Member(models.Model):\par
+    """A model of a rock band member."""\par
+    name = models.CharField("Member's name", max_length=200)\par
+    instrument = models.CharField(choices=(\par
+            ('g', "Guitar"),\par
+            ('b', "Bass"),\par
+            ('d', "Drums"),\par
+        ),\par
+        max_length=1\par
+    )\par
+    band = models.ForeignKey("Band")\par
+      \par
+\fs28 URLs and views \par
+\fs22\par
+A clean, elegant URL scheme is an important detail in a high-quality Web application. Django encourages beautiful URL design and doesn\f1\rquote\f0 t put any cruft in URLs, like .php or .asp.\par
+To design URLs for an application, you create a Python module called a URLconf. Like a table of contents for your app, it contains a simple mapping between URL patterns and your views.\par
+Read more \par
+from django.urls import path\par
+\par
+from . import views\par
+\par
+urlpatterns = [\par
+    path('bands/', views.band_listing, name='band-list'),\par
+    path('bands/<int:band_id>/', views.band_detail, name='band-detail'),\par
+    path('bands/search/', views.band_search, name='band-search'),\par
+]\par
+      \par
+from django.shortcuts import render\par
+\par
+def band_listing(request):\par
+    """A view of all bands."""\par
+    bands = models.Band.objects.all()\par
+    return render(request, 'bands/band_listing.html', \{'bands': bands\})\par
+      \par
+\fs28 Templates \fs22\par
+\par
+Django\f1\rquote\f0 s template language is designed to strike a balance between power and ease. It\f1\rquote\f0 s designed to feel comfortable and easy-to-learn to those used to working with HTML, like designers and front-end developers. But it is also flexible and highly extensible, allowing developers to augment the template language as needed.\par
+Read more \par
+<html>\par
+  <head>\par
+    <title>Band Listing</title>\par
+  </head>\par
+  <body>\par
+    <h1>All Bands</h1>\par
+    <ul>\par
+    \{% for band in bands %\}\par
+      <li>\par
+        <h2><a href="\{\{ band.get_absolute_url \}\}">\{\{ band.name \}\}</a></h2>\par
+        \{% if band.can_rock %\}<p>This band can rock!</p>\{% endif %\}\par
+      </li>\par
+    \{% endfor %\}\par
+    </ul>\par
+  </body>\par
+</html>\par
+\par
+      \par
+\fs28 Forms \fs22\par
+\par
+Django provides a powerful form library that handles rendering forms as HTML, validating user-submitted data, and converting that data to native Python types. Django also provides a way to generate forms from your existing models and use those forms to create and update data.\par
+Read more \par
+from django import forms\par
+\par
+class BandContactForm(forms.Form):\par
+    subject = forms.CharField(max_length=100)\par
+    message = forms.CharField()\par
+    sender = forms.EmailField()\par
+    cc_myself = forms.BooleanField(required=False)\par
+      \par
+\fs28 Authentication \fs22\par
+\par
+Django comes with a full-featured and secure authentication system. It handles user accounts, groups, permissions and cookie-based user sessions. This lets you easily build sites that let users to create accounts and safely log in/out.\par
+Read more \par
+from django.contrib.auth.decorators import login_required\par
+from django.shortcuts import render\par
+\par
+@login_required\par
+def my_protected_view(request):\par
+    """A view that can only be accessed by logged-in users"""\par
+    return render(request, 'protected.html', \{'current_user': request.user\})\par
+      \par
+\fs28 Admin \par
+\fs22\par
+One of the most powerful parts of Django is its automatic admin interface. It reads metadata in your models to provide a powerful and production-ready interface that content producers can immediately use to start managing content on your site. It\f1\rquote\f0 s easy to set up and provides many hooks for customization.\par
+Read more \par
+from django.contrib import admin\par
+from bands.models import Band, Member\par
+\par
+class MemberAdmin(admin.ModelAdmin):\par
+    """Customize the look of the auto-generated admin for the Member model"""\par
+    list_display = ('name', 'instrument')\par
+    list_filter = ('band',)\par
+\par
+admin.site.register(Band)  # Use the default options\par
+admin.site.register(Member, MemberAdmin)  # Use the customized options\par
+      \par
+\fs28 Internationalization \par
+\fs22\par
+Django offers full support for translating text into different languages, plus locale-specific formatting of dates, times, numbers and time zones. It lets developers and template authors specify which parts of their apps should be translated or formatted for local languages and cultures, and it uses these hooks to localize Web applications for particular users according to their preferences.\par
+Read more \par
+from django.shortcuts import render\par
+from django.utils.translation import ugettext\par
+\par
+def homepage(request):\par
+    """\par
+    Shows the homepage with a welcome message that is translated in the\par
+    user's language.\par
+    """\par
+    message = ugettext('Welcome to our site!')\par
+    return render(request, 'homepage.html', \{'message': message\})\par
+      \par
+\{% load i18n %\}\par
+<html>\par
+  <head>\par
+    <title>\{% trans 'Homepage - Hall of Fame' %\}</title>\par
+  </head>\par
+  <body>\par
+    \{# Translated in the view: #\}\par
+    <h1>\{\{ message \}\}</h1>\par
+    <p>\par
+      \{% blocktrans count member_count=bands.count %\}\par
+      Here is the only band in the hall of fame:\par
+      \{% plural %\}\par
+      Here are all the \{\{ member_count \}\} bands in the hall of fame:\par
+      \{% endblocktrans %\}\par
+    </p>\par
+    <ul>\par
+    \{% for band in bands %\}\par
+      <li>\par
+        <h2><a href="\{\{ band.get_absolute_url \}\}">\{\{ band.name \}\}</a></h2>\par
+        \{% if band.can_rock %\}<p>\{% trans 'This band can rock!' %\}</p>\{% endif %\}\par
+      </li>\par
+    \{% endfor %\}\par
+    </ul>\par
+  </body>\par
+</html>\par
+\par
+      \par
+\fs28 Security \par
+\fs22\par
+Django provides multiple protections against:\par
+Clickjacking\par
+Cross-site scripting\par
+Cross Site Request Forgery (CSRF)\par
+SQL injection\par
+Remote code execution\par
+\par
+\par
+\par
+\par
+}
+ 

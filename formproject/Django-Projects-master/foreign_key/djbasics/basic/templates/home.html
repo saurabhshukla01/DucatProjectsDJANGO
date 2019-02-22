@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Basic Django
+{% endblock %}
+
+{% block content %}
+<div style="padding-left:200px">
+{% for pub in pub_list %}
+Publisher name :{{pub.name}}<br />
+email :{{ pub.email}}<br /><br />
+
+{% for book in pub.book_set.all %}
+<ul>
+<li>Book:{{book.title}}</li><br />
+Published Date:{{book.publication_date}}<br /><br />
+</ul>
+{% endfor %}
+<hr width="500px">
+{% endfor %}
+
+</div>
+
+{% endblock %}

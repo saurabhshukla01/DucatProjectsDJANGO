@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}
+{% for University in profflist %}
+<h2>University Name : {{University.University_name}}</h2>
+<h2>University location : {{University.University_location}}</h2>
+<img src="{{University.University_image.url}}" height="150px" width="150px">
+{% endfor %}
+{% endblock %}

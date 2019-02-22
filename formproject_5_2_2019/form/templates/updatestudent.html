@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<form method="POST" enctype="multipart/form-data" action="{% url 'update' data.id %}">  
+    {% csrf_token %}  
+<br>  
+<h3>Update Details</h3>  
+<label>Student Name:</label>  
+<input type="text" name="name" required maxlength="100" value="{{ data.name }}" />  
+<br>
+<label>RollNo</label>  
+<input type="text" name="roll_no" required maxlength="100" value="{{ data.roll_no }}" />  
+<br>
+<label>Year in School:</label>  
+<input type="text" name="year_in_school" required maxlength="100" value="{{ data.year_in_school }}" />  
+<br>
+<label>image:</label>  
+<input type="file" name="image"/>  
+<br>
+<img src='{{ data.image.url }}' height="250" width="250">
+<br>
+<input type="submit" value="UPDATE STUDENT" class="btn btn-warning">
+</form> 
+{% endblock %}

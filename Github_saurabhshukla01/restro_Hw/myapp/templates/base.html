@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RestauranT</title>
+    <link rel="stylesheet" type="text/css" media="screen" href="{% static 'main.css' %}">
+</head>
+<body>
+    <div>
+        <div class="frame">
+            <div class="header">
+                <div class="logo1"> <a href="{% url 'homepage' %}"><img src="{% static 'spoon-and-fork.png' %}" alt="spoon&fork" height="140px" width="140px"></a></div>
+                <div class="logo2"> <a href="{% url 'homepage' %}"><img src="{% static 'logo.gif' %}" alt="logo" height="150px" width="160px"></a></div>
+                <div class="datahead">RestauranT</div>
+                <div>
+                        <a style="color:white;" href="{% url 'homepage' %}">Home</a>&nbsp;
+                        <a style="color:white;" href="{% url 'showrestrouserfun' %}">Show Restaurants</a>
+                    </div>
+            </div>
+            <div class="middle">
+                    {% block content %}
+
+                    {% endblock %}
+            </div>
+            <div class="footer"></div>
+        </div>
+    </div>
+    
+</body>
+</html>

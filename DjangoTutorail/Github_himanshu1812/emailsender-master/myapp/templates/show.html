@@ -1,0 +1,17 @@
+<html>
+<head>  
+    <title>Employee Records</title> 
+</head>  
+<body>  
+<table>
+<tbody>  
+{% for employee in empl %}  
+    <tr>  
+        <td>{{ employee.mail }}</td>  
+        <td>{{ employee.mes }}</td>  
+    </tr>  
+{% endfor %}  
+    </tbody>  
+</table>  
+</body>  
+</html>  

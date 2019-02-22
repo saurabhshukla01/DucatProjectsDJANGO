@@ -1,0 +1,18 @@
+class Contact:
+   first_name-
+   email
+
+class Address:
+   contact-ForeignKey(Contact)
+   address-
+   city-
+   state-
+
+r=Contact.objects.create(first_name='ravi',email='')
+p=Address.objects.create(contact=r,address='d')
+p=Address.objects.create(contact=r,address='m')
+            or
+r.address_set.create(address='m')
+r.address_set.all()
+r.address_set.get(address='d')
+

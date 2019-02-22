@@ -1,0 +1,28 @@
+{% load staticfiles %}
+
+<!--
+this tag  tells Django to load the staticfiles template tags
+that are provided by the django.contrib.staticfiles application. After loading
+it, you are able to use the static   template fiter throughout this template.
+-->
+
+<!--
+
+ there are two block  tags. These tell Django that we want to
+define a block in that area. 
+
+-->
+<html>
+<head>
+   <title>{% block title %}{% endblock %}</title>
+   <link href="{% static 'css/blog.css' %}" rel='stylesheet'>
+   </head>
+   
+<body>
+<div id='content'>
+   {% block content %}
+    {% endblock %}
+</div>
+
+</body>
+</html>

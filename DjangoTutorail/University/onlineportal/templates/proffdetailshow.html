@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% for proff_details in proffdetaillist %}
+<h2>proff Name : {{proff_details.proff_name}}</h2>
+<img src="{{proff_details.proff_image.url}}" height="150px" width="150px">
+<h2>proff salary : {{proff_details.proff_salary}}</h2>
+<h2>proff email : {{proff_details.proff_email}}</h2>
+<h2>proff address : {{proff_details.proff_address}}</h2>
+<h2>proff lacture fee : {{proff_details.proff_lacture_fee}}</h2>
+proff_image
+{% endfor %}
+{% endblock %}

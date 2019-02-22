@@ -1,0 +1,70 @@
+{% load static  %}
+
+<!-- Header section -->
+	<header class="header-section">
+		<div class="header-top">
+			<div class="container">
+				<div class="row">
+					<div class="col-lg-6 header-top-left">
+						<div class="top-info">
+							<i class="fa fa-phone"></i>
+							(+88) 666 121 4321
+						</div>
+						<div class="top-info">
+							<i class="fa fa-envelope"></i>
+							info.leramiz@colorlib.com
+						</div>
+					</div>
+					<div class="col-lg-6 text-lg-right header-top-right">
+						<div class="top-social">
+							<a href=""><i class="fa fa-facebook"></i></a>
+							<a href=""><i class="fa fa-twitter"></i></a>
+							<a href=""><i class="fa fa-instagram"></i></a>
+							<a href=""><i class="fa fa-pinterest"></i></a>
+							<a href=""><i class="fa fa-linkedin"></i></a>
+						</div>
+						<div class="user-panel">
+							{% if user.is_authenticated %}
+							{%if user.is_seller %}
+							<a href="{% url 'dashboard' user.id %}"><i class="fa fa-user-circle-o"></i> {{user}} (seller)</a>
+							{% else %}
+							<a href="{% url 'dashboard' user.id %}"><i class="fa fa-user-circle-o"></i> {{user}} (buyer)</a>
+							{% endif %}
+							<a href="{% url 'logout' %}"><i class="fa fa-si0gn-in"></i> Logout</a>
+							{% else %}
+							<a href="{% url 'register' %}"><i class="fa fa-user-circle-o"></i> Register</a>
+							<a href="{% url 'login' %}"><i class="fa fa-si0gn-in"></i> Login</a>
+							{% endif %}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="container">
+			<div class="row">
+				<div class="col-12">
+					<div class="site-navbar">
+						<a href="#" class="site-logo"><img src="{% static 'img/logo.png' %}" alt=""></a>
+						<div class="nav-switch">
+							<i class="fa fa-bars"></i>
+						</div>
+						<ul class="main-menu">
+							<li >
+							<!--{% if '/' == request.path %}-->
+							 <!--class='active'-->
+							<!--{% else %}-->
+							  <!--class=''-->
+							<!--{% endif %}-->
+							<a href="{% url 'index' %}">Home</a></li>
+							<li><a href="{% url 'listings' %}">FEATURED LISTING</a></li>
+							<li><a href="{% url 'aboutus' %}">ABOUT US</a></li>
+							<li><a href="single-list.html">Pages</a></li>
+							<li><a href="blog.html">Blog</a></li>
+							<li><a href="contact.html">Contact</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</header>
+	<!-- Header section end -->
